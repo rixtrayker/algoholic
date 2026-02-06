@@ -1,332 +1,627 @@
-# Algoholic — DSA Topic Reference
-## Complete Taxonomy for Database Seeding & Question Generation
+# Algoholic — DSA Topic Reference Guide
+## Complete Taxonomy for Database Seeding, Graph Construction & RAG Pipeline
 
 ---
 
-## Purpose
+## Document Purpose
 
-Single source of truth for:
-- Complete DSA topic hierarchy with patterns, pitfalls, and edge cases
-- Database seeding structure (PostgreSQL + Apache AGE)
-- Embedding generation targets for vector search
-- RAG pipeline seed data
+This document serves as the **single source of truth** for:
+
+1. **Database Seeding:** PostgreSQL tables population
+2. **Graph Construction:** Apache AGE nodes and edges creation
+3. **Embeddings Generation:** Vector representations for semantic search
+4. **RAG Pipeline:** Context retrieval and AI hint generation
+5. **n8n Workflows:** Automated content generation and relationship mapping
 
 ---
 
-## Topic Hierarchy
+## Table of Contents
+
+1. [Complete Topic Taxonomy](#taxonomy)
+2. [Database Schema Reference](#database-schema)
+3. [Graph Construction Rules](#graph-construction)
+4. [Embeddings Strategy](#embeddings-strategy)
+5. [RAG Pipeline Configuration](#rag-pipeline)
+6. [Topic Details Template](#topic-details)
+
+---
+
+## 1. COMPLETE TOPIC TAXONOMY {#taxonomy}
+
+### Hierarchical Structure
 
 ```
-Level 0: Category (e.g., "Data Structures")
-  └─ Level 1: Topic (e.g., "Arrays")
-      └─ Level 2: Subtopic (e.g., "Two Pointers")
-          └─ Level 3: Pattern (e.g., "Opposite Direction")
+DSA_ROOT
+├── 1. FUNDAMENTALS
+│   ├── 1.1 Time Complexity
+│   ├── 1.2 Space Complexity
+│   ├── 1.3 Big O Notation
+│   ├── 1.4 Recursion Basics
+│   └── 1.5 Iteration vs Recursion
+│
+├── 2. ARRAYS & STRINGS
+│   ├── 2.1 Array Basics
+│   │   ├── 2.1.1 Traversal
+│   │   ├── 2.1.2 Insertion & Deletion
+│   │   └── 2.1.3 Array Manipulation
+│   ├── 2.2 Two Pointers
+│   │   ├── 2.2.1 Opposite Direction
+│   │   ├── 2.2.2 Same Direction
+│   │   └── 2.2.3 Fast & Slow Pointers
+│   ├── 2.3 Sliding Window
+│   │   ├── 2.3.1 Fixed Size Window
+│   │   ├── 2.3.2 Variable Size Window
+│   │   └── 2.3.3 Shrinkable Window
+│   ├── 2.4 Prefix Sum
+│   │   ├── 2.4.1 1D Prefix Sum
+│   │   ├── 2.4.2 2D Prefix Sum
+│   │   └── 2.4.3 Prefix Sum with Hash Map
+│   ├── 2.5 Kadane's Algorithm
+│   ├── 2.6 Dutch National Flag
+│   ├── 2.7 String Manipulation
+│   │   ├── 2.7.1 String Matching
+│   │   ├── 2.7.2 KMP Algorithm
+│   │   └── 2.7.3 Rabin-Karp
+│   └── 2.8 Palindromes
+│
+├── 3. LINKED LISTS
+│   ├── 3.1 Singly Linked List
+│   ├── 3.2 Doubly Linked List
+│   ├── 3.3 Circular Linked List
+│   ├── 3.4 Fast & Slow Pointers
+│   ├── 3.5 Cycle Detection
+│   ├── 3.6 Reversal Techniques
+│   └── 3.7 Merge Operations
+│
+├── 4. STACKS & QUEUES
+│   ├── 4.1 Stack Basics
+│   ├── 4.2 Monotonic Stack
+│   │   ├── 4.2.1 Monotonic Increasing
+│   │   ├── 4.2.2 Monotonic Decreasing
+│   │   └── 4.2.3 Next Greater/Smaller Element
+│   ├── 4.3 Queue Basics
+│   ├── 4.4 Deque (Double-ended Queue)
+│   ├── 4.5 Monotonic Deque
+│   ├── 4.6 Priority Queue (Heap)
+│   └── 4.7 Expression Evaluation
+│
+├── 5. HASH TABLES & SETS
+│   ├── 5.1 Hash Map Basics
+│   ├── 5.2 Hash Set
+│   ├── 5.3 Counting Patterns
+│   ├── 5.4 Two Sum Variations
+│   └── 5.5 Collision Handling
+│
+├── 6. TREES
+│   ├── 6.1 Binary Trees
+│   │   ├── 6.1.1 Tree Traversals (Inorder, Preorder, Postorder, Level Order)
+│   │   ├── 6.1.2 Tree Construction
+│   │   └── 6.1.3 Tree Properties
+│   ├── 6.2 Binary Search Trees (BST)
+│   │   ├── 6.2.1 BST Operations
+│   │   ├── 6.2.2 BST Validation
+│   │   ├── 6.2.3 Inorder Successor
+│   │   └── 6.2.4 BST to Sorted Array
+│   ├── 6.3 Balanced Trees (AVL, Red-Black)
+│   ├── 6.4 Tries (Prefix Trees)
+│   │   ├── 6.4.1 Trie Construction
+│   │   ├── 6.4.2 Word Search
+│   │   └── 6.4.3 Autocomplete
+│   ├── 6.5 Segment Trees
+│   ├── 6.6 Fenwick Trees (Binary Indexed Tree)
+│   └── 6.7 Tree DP
+│       ├── 6.7.1 Path Sum Problems
+│       ├── 6.7.2 Diameter Problems
+│       └── 6.7.3 Subtree Problems
+│
+├── 7. HEAPS
+│   ├── 7.1 Min Heap
+│   ├── 7.2 Max Heap
+│   ├── 7.3 K-way Merge
+│   ├── 7.4 Top K Elements
+│   ├── 7.5 Median of Stream
+│   └── 7.6 Heap Sort
+│
+├── 8. GRAPHS
+│   ├── 8.1 Graph Representations (Adjacency Matrix/List/Edge List)
+│   ├── 8.2 Graph Traversal
+│   │   ├── 8.2.1 DFS (Depth-First Search)
+│   │   └── 8.2.2 BFS (Breadth-First Search)
+│   ├── 8.3 Shortest Path Algorithms
+│   │   ├── 8.3.1 Dijkstra's Algorithm
+│   │   ├── 8.3.2 Bellman-Ford
+│   │   ├── 8.3.3 Floyd-Warshall
+│   │   └── 8.3.4 A* Search
+│   ├── 8.4 Minimum Spanning Tree (Kruskal's, Prim's)
+│   ├── 8.5 Topological Sort (Kahn's, DFS-based)
+│   ├── 8.6 Union-Find (Disjoint Set)
+│   │   ├── 8.6.1 Basic Union-Find
+│   │   ├── 8.6.2 Path Compression
+│   │   └── 8.6.3 Union by Rank
+│   ├── 8.7 Cycle Detection
+│   ├── 8.8 Graph Coloring
+│   ├── 8.9 Bipartite Graphs
+│   └── 8.10 Strongly Connected Components (Kosaraju's, Tarjan's)
+│
+├── 9. DYNAMIC PROGRAMMING
+│   ├── 9.1 DP Fundamentals
+│   │   ├── 9.1.1 Overlapping Subproblems
+│   │   ├── 9.1.2 Optimal Substructure
+│   │   ├── 9.1.3 Memoization (Top-Down)
+│   │   └── 9.1.4 Tabulation (Bottom-Up)
+│   ├── 9.2 1D DP (Fibonacci, Climbing Stairs, House Robber, Decode Ways)
+│   ├── 9.3 2D DP (Grid Paths, LCS, Edit Distance, Dungeon Game)
+│   ├── 9.4 Knapsack Problems
+│   │   ├── 9.4.1 0/1 Knapsack
+│   │   ├── 9.4.2 Unbounded Knapsack
+│   │   ├── 9.4.3 Subset Sum
+│   │   └── 9.4.4 Partition Equal Subset
+│   ├── 9.5 Subsequence DP (LIS, LCS, LPS)
+│   ├── 9.6 String DP (Longest Palindromic Substring, Word Break, Regex Matching)
+│   ├── 9.7 State Machine DP
+│   ├── 9.8 Interval DP
+│   ├── 9.9 Tree DP
+│   ├── 9.10 Digit DP
+│   ├── 9.11 Bitmask DP
+│   └── 9.12 DP Optimizations (Space, Rolling Array, State Compression)
+│
+├── 10. GREEDY ALGORITHMS
+│   ├── 10.1 Greedy Fundamentals
+│   ├── 10.2 Interval Problems (Meeting Rooms, Merge Intervals)
+│   ├── 10.3 Scheduling Problems
+│   ├── 10.4 Huffman Coding
+│   └── 10.5 Gas Station
+│
+├── 11. BACKTRACKING
+│   ├── 11.1 Backtracking Fundamentals
+│   ├── 11.2 Permutations
+│   ├── 11.3 Combinations
+│   ├── 11.4 Subsets
+│   ├── 11.5 N-Queens
+│   ├── 11.6 Sudoku Solver
+│   ├── 11.7 Word Search
+│   └── 11.8 Partition Problems
+│
+├── 12. BINARY SEARCH
+│   ├── 12.1 Basic Binary Search
+│   ├── 12.2 Binary Search on Answer
+│   ├── 12.3 Search in Rotated Array
+│   ├── 12.4 Finding Boundaries
+│   ├── 12.5 Median of Two Sorted Arrays
+│   └── 12.6 Capacity to Ship Packages
+│
+├── 13. BIT MANIPULATION
+│   ├── 13.1 Bitwise Operators
+│   ├── 13.2 Bit Tricks
+│   ├── 13.3 Single Number Problems
+│   ├── 13.4 Counting Bits
+│   └── 13.5 Bit Masking
+│
+├── 14. MATH & NUMBER THEORY
+│   ├── 14.1 Prime Numbers
+│   ├── 14.2 GCD & LCM
+│   ├── 14.3 Fast Exponentiation
+│   ├── 14.4 Modular Arithmetic
+│   ├── 14.5 Combinatorics
+│   └── 14.6 Probability
+│
+└── 15. ADVANCED TOPICS
+    ├── 15.1 Advanced Graph Algorithms
+    ├── 15.2 Advanced DP Techniques
+    ├── 15.3 Computational Geometry
+    ├── 15.4 String Algorithms (Advanced)
+    └── 15.5 Game Theory
 ```
 
 ---
 
-## Topic Node Schema
+## 2. DATABASE SCHEMA REFERENCE {#database-schema}
 
-Each topic in the database follows this structure:
+### Core Entity Tables
+
+```sql
+-- Topics Table
+CREATE TABLE topics (
+    topic_id SERIAL PRIMARY KEY,
+    topic_code VARCHAR(20) UNIQUE NOT NULL, -- e.g., "2.3.2"
+    topic_name VARCHAR(200) NOT NULL,
+    parent_topic_id INTEGER REFERENCES topics(topic_id),
+    depth_level INTEGER NOT NULL, -- 1=main, 2=sub, 3=sub-sub
+    difficulty_range VARCHAR(20), -- "easy-medium", "medium-hard"
+    description TEXT,
+    key_concepts TEXT[],
+    estimated_practice_hours FLOAT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Patterns Table
+CREATE TABLE patterns (
+    pattern_id SERIAL PRIMARY KEY,
+    pattern_name VARCHAR(100) UNIQUE NOT NULL,
+    pattern_type VARCHAR(50), -- "technique", "template", "approach"
+    description TEXT,
+    time_complexity VARCHAR(50),
+    space_complexity VARCHAR(50),
+    when_to_use TEXT,
+    code_template TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Common Mistakes Table
+CREATE TABLE common_mistakes (
+    mistake_id SERIAL PRIMARY KEY,
+    mistake_category VARCHAR(100),
+    mistake_name VARCHAR(200),
+    description TEXT,
+    example_code TEXT,
+    correct_code TEXT,
+    how_to_avoid TEXT,
+    severity VARCHAR(20), -- "critical", "major", "minor"
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Edge Cases Table
+CREATE TABLE edge_cases (
+    edge_case_id SERIAL PRIMARY KEY,
+    edge_case_category VARCHAR(100),
+    edge_case_name VARCHAR(200),
+    description TEXT,
+    test_input JSONB,
+    expected_behavior TEXT,
+    why_important TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Prerequisites Table
+CREATE TABLE prerequisites (
+    prerequisite_id SERIAL PRIMARY KEY,
+    target_topic_id INTEGER REFERENCES topics(topic_id),
+    required_topic_id INTEGER REFERENCES topics(topic_id),
+    strength VARCHAR(20), -- "strong", "moderate", "weak"
+    reason TEXT,
+    UNIQUE(target_topic_id, required_topic_id)
+);
+```
+
+### Relationship Tables
+
+```sql
+-- Topic-Pattern Relationships
+CREATE TABLE topic_patterns (
+    topic_id INTEGER REFERENCES topics(topic_id),
+    pattern_id INTEGER REFERENCES patterns(pattern_id),
+    relevance_score FLOAT CHECK (relevance_score BETWEEN 0 AND 1),
+    PRIMARY KEY (topic_id, pattern_id)
+);
+
+-- Problem-Topic Relationships
+CREATE TABLE problem_topics (
+    problem_id INTEGER REFERENCES problems(problem_id),
+    topic_id INTEGER REFERENCES topics(topic_id),
+    is_primary BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (problem_id, topic_id)
+);
+
+-- Problem-Mistake Relationships
+CREATE TABLE problem_mistakes (
+    problem_id INTEGER REFERENCES problems(problem_id),
+    mistake_id INTEGER REFERENCES common_mistakes(mistake_id),
+    frequency VARCHAR(20), -- "very_common", "common", "occasional", "rare"
+    PRIMARY KEY (problem_id, mistake_id)
+);
+
+-- Problem-EdgeCase Relationships
+CREATE TABLE problem_edge_cases (
+    problem_id INTEGER REFERENCES problems(problem_id),
+    edge_case_id INTEGER REFERENCES edge_cases(edge_case_id),
+    must_test BOOLEAN DEFAULT TRUE,
+    PRIMARY KEY (problem_id, edge_case_id)
+);
+```
+
+---
+
+## 3. GRAPH CONSTRUCTION RULES {#graph-construction}
+
+### Apache AGE Graph Schema
+
+#### Node Types
+
+```cypher
+// Topic Node
+CREATE (t:Topic {
+    topic_id: 123,
+    topic_code: "2.3.2",
+    name: "Variable Size Sliding Window",
+    difficulty_range: "medium-hard",
+    depth_level: 3,
+    description: "...",
+    key_concepts: ["window expansion", "shrinking condition"],
+    estimated_practice_hours: 8.0
+})
+
+// Pattern Node
+CREATE (p:Pattern {
+    pattern_id: 45,
+    name: "Two Pointers - Opposite Direction",
+    time_complexity: "O(n)",
+    space_complexity: "O(1)",
+    when_to_use: "When input is sorted"
+})
+
+// Problem Node
+CREATE (prob:Problem {
+    problem_id: 789,
+    title: "Container With Most Water",
+    leetcode_id: 11,
+    difficulty: 45
+})
+
+// Mistake Node
+CREATE (m:Mistake {
+    mistake_id: 55,
+    category: "integer_overflow",
+    name: "Unchecked multiplication overflow",
+    severity: "critical"
+})
+
+// EdgeCase Node
+CREATE (ec:EdgeCase {
+    edge_case_id: 88,
+    category: "empty_input",
+    name: "Empty array",
+    why_important: "Causes array[0] crash"
+})
+```
+
+#### Edge Types (Relationships)
+
+```cypher
+// Prerequisite relationship
+(Topic)-[:PREREQUISITE {strength: "strong", reason: "..."}]->(Topic)
+
+// Topic uses Pattern
+(Topic)-[:USES_PATTERN {frequency: "always"}]->(Pattern)
+
+// Problem belongs to Topic
+(Problem)-[:BELONGS_TO {is_primary: true}]->(Topic)
+
+// Problem uses Pattern
+(Problem)-[:USES_PATTERN]->(Pattern)
+
+// Question tests Topic
+(Question)-[:TESTS {cognitive_skill: "observation"}]->(Topic)
+
+// Problem has common Mistake
+(Problem)-[:HAS_MISTAKE {frequency: "very_common"}]->(Mistake)
+
+// Problem requires testing EdgeCase
+(Problem)-[:REQUIRES_TEST]->(EdgeCase)
+
+// Learning Path
+(Topic)-[:NEXT_RECOMMENDED {difficulty_increase: 10}]->(Topic)
+
+// Similar Problems
+(Problem)-[:SIMILAR_TO {similarity_score: 0.85}]->(Problem)
+```
+
+#### Query Patterns
+
+```cypher
+// Find all prerequisites for a topic (recursive)
+MATCH path = (target:Topic {topic_code: "9.4.1"})-[:PREREQUISITE*]->(prereq:Topic)
+RETURN prereq.name, length(path) as depth
+ORDER BY depth
+
+// Find patterns used in topic
+MATCH (t:Topic {name: "Sliding Window"})-[:USES_PATTERN]->(p:Pattern)
+RETURN p.name, p.time_complexity
+
+// Find common mistakes for problem
+MATCH (prob:Problem {leetcode_id: 11})-[:HAS_MISTAKE]->(m:Mistake)
+RETURN m.name, m.severity, m.how_to_avoid
+```
+
+---
+
+## 4. EMBEDDINGS STRATEGY {#embeddings-strategy}
+
+### Collections Configuration
 
 ```json
 {
-  "topic_id": "unique_identifier",
-  "name": "Topic Name",
-  "category": "category_name",
-  "level": 0-3,
-  "parent_topic_id": "parent_id or null",
-  "description": "Detailed description",
-  "difficulty_range": [min, max],
-  "prerequisites": ["topic_id1", "topic_id2"],
-  "related_topics": ["topic_id3"],
-  "core_patterns": [
+  "embedding_collections": [
     {
-      "pattern_name": "Name",
-      "when_to_use": "Conditions",
-      "template_code": "code_snippet",
-      "time_complexity": "O(...)",
-      "space_complexity": "O(...)"
+      "collection_name": "topic_descriptions",
+      "fields_to_embed": ["topic_name", "description", "key_concepts"],
+      "embedding_model": "text-embedding-3-small",
+      "vector_dimension": 1536
+    },
+    {
+      "collection_name": "problem_statements",
+      "fields_to_embed": ["problem_title", "description", "constraints"],
+      "embedding_model": "text-embedding-3-small",
+      "vector_dimension": 1536
+    },
+    {
+      "collection_name": "pattern_templates",
+      "fields_to_embed": ["pattern_name", "description", "when_to_use", "code_template"],
+      "embedding_model": "text-embedding-3-small",
+      "vector_dimension": 1536
+    },
+    {
+      "collection_name": "common_mistakes",
+      "fields_to_embed": ["mistake_name", "description", "how_to_avoid"],
+      "embedding_model": "all-MiniLM-L6-v2",
+      "vector_dimension": 384
+    }
+  ]
+}
+```
+
+### Similarity Search
+
+```python
+# Find similar problems
+def find_similar_problems(problem_description, top_k=5):
+    results = chroma_db.query(
+        collection="problem_statements",
+        query_texts=[problem_description],
+        n_results=top_k
+    )
+    return results
+
+# Identify mistakes from code
+def identify_mistake(user_buggy_code, problem_id):
+    results = chroma_db.query(
+        collection="common_mistakes",
+        query_texts=[f"Buggy code: {user_buggy_code}"],
+        where={"related_problem_id": problem_id},
+        n_results=5
+    )
+    return results
+```
+
+---
+
+## 5. RAG PIPELINE CONFIGURATION {#rag-pipeline}
+
+### Context Assembly Rules
+
+```json
+{
+  "rag_context_types": {
+    "hint_generation": {
+      "context_components": [
+        {"source": "problem_statements", "query": "Current problem", "top_k": 1, "weight": 0.3},
+        {"source": "solution_explanations", "query": "User approach + problem", "top_k": 2, "weight": 0.4},
+        {"source": "common_mistakes", "query": "User buggy code", "top_k": 3, "weight": 0.2},
+        {"source": "user_progress_db", "query": "Past performance", "weight": 0.1}
+      ],
+      "max_context_length": 3000
+    },
+    "weakness_analysis": {
+      "context_components": [
+        {"source": "user_attempts_db", "query": "Failed attempts (30 days)", "weight": 0.4},
+        {"source": "topic_descriptions", "query": "Topics with low mastery", "top_k": 5, "weight": 0.3},
+        {"source": "question_bank", "query": "Frequently wrong questions", "top_k": 10, "weight": 0.3}
+      ],
+      "max_context_length": 4000
+    }
+  }
+}
+```
+
+### Prompt Templates
+
+```json
+{
+  "hint_level_1_socratic": {
+    "template": "You are a patient DSA tutor. User solving: {problem_title}
+
+Context: {problem_description}
+User's approach: {user_approach}
+
+Provide a Level 1 Socratic question that guides without giving away answer.
+
+Examples:
+- 'What happens when capacity is 0?'
+- 'When pointers meet, what does that tell you?'
+
+Hint:",
+    "max_tokens": 150
+  },
+  "hint_level_2_directional": {
+    "template": "Provide Level 2 hint pointing right direction without full solution.
+
+Examples:
+- 'Consider using hash set to track seen elements'
+- 'Think about what previous cell tells you'",
+    "max_tokens": 200
+  },
+  "hint_level_3_concrete": {
+    "template": "Provide Level 3 hint with concrete steps but NO code.
+
+Format:
+1. Initialize X
+2. For each element, do Y
+3. Check condition Z
+4. Return result",
+    "max_tokens": 300
+  }
+}
+```
+
+---
+
+## 6. TOPIC DETAILS TEMPLATE {#topic-details}
+
+Standard template for each topic:
+
+```json
+{
+  "topic_code": "X.Y.Z",
+  "topic_name": "Topic Name",
+  "parent_code": "X.Y",
+  "depth_level": 3,
+  "difficulty_range": "medium",
+  "estimated_practice_hours": 8.0,
+
+  "description": "Full description...",
+
+  "key_concepts": ["Concept 1", "Concept 2", "Concept 3"],
+
+  "prerequisites": [
+    {
+      "topic_code": "X.Y",
+      "strength": "strong",
+      "reason": "Why this is prerequisite"
     }
   ],
-  "common_pitfalls": [
+
+  "patterns": [
     {
-      "pitfall": "Description",
-      "why_common": "Why students make this",
-      "how_to_avoid": "Fix",
-      "example": "Code"
+      "pattern_name": "Pattern Name",
+      "time_complexity": "O(n)",
+      "space_complexity": "O(1)",
+      "template": "code template...",
+      "when_to_use": "When to apply..."
     }
   ],
+
+  "common_mistakes": [
+    {
+      "mistake_name": "Mistake Name",
+      "severity": "critical|major|minor",
+      "example_code": "buggy code...",
+      "correct_code": "fixed code...",
+      "how_to_avoid": "How to avoid..."
+    }
+  ],
+
   "edge_cases": [
     {
-      "case": "Description",
-      "example_input": "input",
-      "common_mistake": "what goes wrong"
+      "case_name": "Edge Case Name",
+      "test_input": "test input",
+      "expected_behavior": "what should happen",
+      "why_important": "why test this"
     }
   ],
-  "practice_problems": [
-    {"leetcode_number": 1, "title": "Two Sum", "difficulty": "Easy"}
+
+  "related_problems": [
+    {
+      "leetcode_id": 11,
+      "title": "Problem Title",
+      "difficulty": 45,
+      "is_classic": true
+    }
   ]
 }
 ```
 
 ---
 
-## Complete Topic Coverage
+**END OF TOPIC REFERENCE**
 
-### 1. Arrays & Strings
-
-#### 1.1 Basic Arrays
-- **Difficulty:** 0-30
-- **Patterns:** Linear scan, index manipulation, in-place operations, prefix/suffix arrays
-- **Pitfalls:** Off-by-one (`i <= n` vs `i < n`), empty array access, integer overflow in sum, modifying during iteration
-- **Edge cases:** Empty, single element, all same, sorted, reverse sorted, negatives, INT_MIN/MAX
-- **Problems:** Two Sum (#1), Best Time to Buy/Sell Stock (#121), Contains Duplicate (#217)
-
-#### 1.2 Two Pointers
-- **Difficulty:** 10-60
-- **Prerequisites:** arrays_basic, loops
-- **Patterns:**
-  - **Opposite Direction:** Start at ends, move toward center. For pairs, palindromes, container problems.
-    ```cpp
-    int left = 0, right = n-1;
-    while (left < right) { /* move based on condition */ }
-    ```
-  - **Same Direction (Slow/Fast):** Both forward, different speeds. Remove duplicates, move elements, partition.
-    ```cpp
-    int slow = 0;
-    for (int fast = 0; fast < n; fast++) {
-        if (condition) arr[slow++] = arr[fast];
-    }
-    ```
-  - **Fast/Slow (Cycle Detection):** Fast moves 2 steps, slow 1. Linked list cycles, finding middle.
-- **Pitfalls:** Off-by-one in pointer init, empty array, infinite loop when pointers don't progress
-- **Problems:** Two Sum II (#167), 3Sum (#15), Container With Most Water (#11), Remove Duplicates (#26), Move Zeroes (#283)
-
-#### 1.3 Sliding Window
-- **Difficulty:** 20-70
-- **Prerequisites:** two_pointers
-- **Patterns:**
-  - **Fixed Size:** Window of size k, slide across array
-  - **Variable Size:** Expand right, shrink left when invalid
-- **Pitfalls:** Not shrinking window correctly, wrong window validity check
-- **Problems:** Max Sum Subarray of Size K, Longest Substring Without Repeating (#3), Minimum Window Substring (#76)
-
-#### 1.4 Prefix Sum
-- **Difficulty:** 15-50
-- **Patterns:** Precompute cumulative sums for O(1) range queries
-- **Pitfalls:** Off-by-one in range calculation, overflow in cumulative sum
-- **Problems:** Range Sum Query (#303), Subarray Sum Equals K (#560)
-
-#### 1.5 Strings
-- **Difficulty:** 10-60
-- **Patterns:** Character frequency, palindrome check, string matching
-- **Pitfalls:** Unsigned size_t subtraction, string copy costs (hidden O(n)), encoding issues
-- **Edge cases:** Empty string, single char, all same chars, spaces
-
-### 2. Hash Tables
-
-- **Difficulty:** 10-50
-- **Patterns:** Frequency counting, complement lookup, grouping by key
-- **When to use:** O(1) lookup needed, no ordering required
-- **When NOT to use:** Need ordered iteration, range queries, min/max
-- **Pitfalls:** Hash collisions (worst case O(n)), rehashing cost, unordered_map vs map choice
-- **Problems:** Two Sum (#1), Group Anagrams (#49), Valid Anagram (#242)
-
-### 3. Linked Lists
-
-- **Difficulty:** 15-60
-- **Patterns:** Fast/slow pointers, dummy head, reverse in-place
-- **Pitfalls:** Null pointer dereference, losing reference to next node during reversal, not handling single node
-- **Edge cases:** Empty list, single node, cycle
-- **Problems:** Reverse Linked List (#206), Merge Two Sorted Lists (#21), Linked List Cycle (#141)
-
-### 4. Stacks & Queues
-
-- **Difficulty:** 15-65
-- **Patterns:**
-  - **Monotonic Stack:** Next greater/smaller element
-  - **Stack for Matching:** Parentheses, nested structures
-  - **Queue for BFS:** Level-order traversal
-- **Pitfalls:** Empty stack pop, not handling unmatched elements
-- **Problems:** Valid Parentheses (#20), Daily Temperatures (#739), Next Greater Element (#496)
-
-### 5. Trees
-
-#### 5.1 Binary Trees
-- **Difficulty:** 20-60
-- **Patterns:** DFS (preorder/inorder/postorder), BFS (level-order), recursive vs iterative
-- **Key insight:** Trees have no cycles → no visited array needed
-- **Problems:** Max Depth (#104), Invert Tree (#226), Level Order Traversal (#102)
-
-#### 5.2 Binary Search Trees
-- **Difficulty:** 25-65
-- **Patterns:** Inorder = sorted, search/insert/delete O(log n) average
-- **Pitfalls:** Unbalanced BST degrades to O(n)
-- **Problems:** Validate BST (#98), Kth Smallest (#230)
-
-#### 5.3 Tries
-- **Difficulty:** 40-70
-- **Patterns:** Prefix matching, autocomplete, word search
-- **Problems:** Implement Trie (#208), Word Search II (#212)
-
-### 6. Heaps / Priority Queues
-
-- **Difficulty:** 30-70
-- **Patterns:** Top-K elements, merge K sorted, median stream (two heaps)
-- **Limitation:** No efficient decrease-key → add duplicates and skip processed
-- **Problems:** Kth Largest (#215), Merge K Sorted Lists (#23), Find Median from Data Stream (#295)
-
-### 7. Graphs
-
-#### 7.1 Graph Traversal
-- **Difficulty:** 30-70
-- **Patterns:**
-  - **DFS:** Recursive or stack-based. Good for: any path, cycle detection, connected components
-  - **BFS:** Queue-based. Good for: shortest path (unweighted), level-order
-- **Pitfalls:** Forgetting visited set, not handling disconnected components
-- **Problems:** Number of Islands (#200), Clone Graph (#133)
-
-#### 7.2 Shortest Path
-- **Difficulty:** 40-80
-- **Patterns:**
-  - **BFS:** Unweighted graphs
-  - **Dijkstra:** Non-negative weights, O((V+E) log V)
-  - **Bellman-Ford:** Negative weights, O(VE)
-- **Key observation:** Dijkstra fails with negative weights
-- **Problems:** Network Delay Time (#743), Cheapest Flights (#787)
-
-#### 7.3 Topological Sort
-- **Difficulty:** 40-65
-- **Patterns:** Kahn's (BFS with in-degree) or DFS postorder (reversed)
-- **Prerequisite:** Must be DAG
-- **Problems:** Course Schedule (#207), Course Schedule II (#210)
-
-#### 7.4 Union-Find
-- **Difficulty:** 35-65
-- **Patterns:** Path compression + union by rank → near O(1) per operation
-- **Problems:** Number of Connected Components (#323), Redundant Connection (#684)
-
-### 8. Binary Search
-
-- **Difficulty:** 20-70
-- **Patterns:**
-  - **Standard:** Find exact target
-  - **Lower/Upper Bound:** Find first/last occurrence
-  - **Search on Answer:** Binary search on result space
-- **Pitfalls:** `(left + right) / 2` overflow → use `left + (right - left) / 2`, wrong loop condition (`<` vs `<=`), wrong mid update (`mid` vs `mid+1`)
-- **Problems:** Binary Search (#704), Search in Rotated Array (#33), Koko Eating Bananas (#875)
-
-### 9. Dynamic Programming
-
-#### 9.1 1D DP
-- **Difficulty:** 30-65
-- **Patterns:** Fibonacci-style, house robber, climbing stairs
-- **Space optimization:** If depends on last 2 states → O(1) space
-- **Problems:** Climbing Stairs (#70), House Robber (#198), Coin Change (#322)
-
-#### 9.2 2D DP
-- **Difficulty:** 40-80
-- **Patterns:** Grid DP, string DP (LCS, edit distance), knapsack
-- **Space optimization:** If depends on previous row only → 1D array
-- **Critical:** 0/1 knapsack iterate backwards, unbounded iterate forwards
-- **Problems:** Unique Paths (#62), LCS (#1143), Edit Distance (#72), 0/1 Knapsack
-
-#### 9.3 Advanced DP
-- **Difficulty:** 60-95
-- **Patterns:** Interval DP, bitmask DP, digit DP, DP on trees
-- **Problems:** Burst Balloons (#312), Palindrome Partitioning (#131)
-
-### 10. Greedy
-
-- **Difficulty:** 25-75
-- **When it works:** Optimal substructure + greedy choice property (provable via exchange argument)
-- **When it fails:** Need to consider all options → use DP instead
-- **Pitfalls:** Greedy "seems" to work but fails on edge cases → always prove or find counterexample
-- **Problems:** Jump Game (#55), Interval Scheduling, Activity Selection
-
-### 11. Backtracking
-
-- **Difficulty:** 35-75
-- **Patterns:** Generate all combinations/permutations, constraint satisfaction, pruning
-- **Template:** Choose → Explore → Unchoose
-- **Problems:** Subsets (#78), Permutations (#46), N-Queens (#51)
-
-### 12. Bit Manipulation
-
-- **Difficulty:** 20-60
-- **Patterns:** XOR for finding unique, bit masking, counting bits
-- **Problems:** Single Number (#136), Number of 1 Bits (#191)
-
----
-
-## Graph Relationships for Database
-
-For each topic, define these relationships in Apache AGE:
-
-```cypher
-(:Topic)-[:PREREQUISITE_FOR]->(:Topic)    -- Must learn A before B
-(:Topic)-[:RELATED_TO]->(:Topic)           -- Connected concepts
-(:Topic)-[:SUBTOPIC_OF]->(:Topic)          -- Hierarchy
-(:Problem)-[:HAS_TOPIC]->(:Topic)          -- Problem uses topic
-(:Problem)-[:USES_PATTERN]->(:Pattern)     -- Problem uses pattern
-(:Problem)-[:SIMILAR_TO]->(:Problem)       -- Similar problems
-(:Problem)-[:FOLLOW_UP_OF]->(:Problem)     -- Harder version
-```
-
-**Example prerequisite chain:**
-```
-Arrays → Two Pointers → Sliding Window
-Arrays → Binary Search
-Arrays → Hash Tables
-Hash Tables → Graph Traversal (adjacency list)
-Recursion → DFS → Backtracking
-Recursion → Dynamic Programming
-```
-
----
-
-## Embedding Strategy
-
-For each topic, generate embeddings from:
-
-1. **Concept explanation** — "Arrays are contiguous memory blocks providing O(1) random access..."
-2. **Common patterns** — "Common array patterns: linear scan, two pointers, sliding window..."
-3. **Pitfalls** — "Common array pitfalls: off-by-one errors, empty array access, integer overflow..."
-
-Store in vector DB with metadata (topic_id, type) for filtered retrieval.
-
----
-
-## RAG Seed Data
-
-For each topic, pre-generate Q&A pairs:
-
-```json
-{
-  "question": "How do I handle an empty array?",
-  "answer": "Always check if (arr.empty()) before accessing elements. For 'find maximum', return INT_MIN or throw exception."
-}
-```
-
-And troubleshooting entries:
-
-```json
-{
-  "symptom": "Segmentation fault when accessing array",
-  "causes": ["Out of bounds", "Uninitialized", "Off-by-one"],
-  "solutions": ["Check i < arr.size()", "Initialize before use", "Use arr.at(i) for bounds checking"]
-}
-```
-
----
-
-## Seeding Workflow
-
-1. Insert topics into PostgreSQL `topics` table (with parent_topic_id for hierarchy)
-2. Create topic nodes in Apache AGE graph
-3. Create PREREQUISITE_FOR, RELATED_TO, SUBTOPIC_OF edges
-4. Insert problems with topic associations
-5. Create problem nodes and HAS_TOPIC/USES_PATTERN edges
-6. Generate embeddings for all topics and problems
-7. Store embeddings in ChromaDB collections
-8. Generate initial questions per topic using LLM + templates
+This document is the authoritative source for all database seeding, graph construction, embeddings generation, and RAG pipeline configuration.
