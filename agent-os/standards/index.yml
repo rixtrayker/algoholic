@@ -1,0 +1,21 @@
+# Agent OS Standards Index
+
+database:
+  seeding-strategy:
+    description: Two-pass insertion pattern for self-referential foreign keys
+  struct-tags:
+    description: Dual json/db tag convention for model structs
+
+golang:
+  enum-types:
+    description: String-based enum pattern with const values
+
+questions:
+  answer-options:
+    description: Structured answer options with wrong answer explanations
+  difficulty-scoring:
+    description: 0-100 numeric score plus categorical label system
+  hint-system:
+    description: Three-level progressive hint disclosure (Socratic to direct)
+  metadata-pattern:
+    description: Tags, concepts, common mistakes, and related links structure
