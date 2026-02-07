@@ -17,25 +17,14 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/yourusername/algoholic/backend/config"
+	"github.com/yourusername/algoholic/backend/models"
+	"github.com/yourusername/algoholic/backend/routes"
 )
 
 var (
 	DB  *gorm.DB
 	cfg *config.Config
 )
-
-type Problem struct {
-	ProblemID       int     `json:"problem_id" gorm:"primaryKey;column:problem_id"`
-	LeetcodeNumber  *int    `json:"leetcode_number,omitempty" gorm:"column:leetcode_number;uniqueIndex"`
-	Title           string  `json:"title" gorm:"column:title;not null"`
-	Description     string  `json:"description" gorm:"column:description;not null"`
-	DifficultyScore float64 `json:"difficulty_score" gorm:"column:difficulty_score;not null"`
-	PrimaryPattern  *string `json:"primary_pattern,omitempty" gorm:"column:primary_pattern"`
-}
-
-func (Problem) TableName() string {
-	return "problems"
-}
 
 func initDB() error {
 	// Get database configuration
@@ -79,90 +68,13 @@ func initDB() error {
 	// Auto-migrate (only in development)
 	if cfg.IsDevelopment() && dbCfg.AutoMigrate {
 		log.Println("Running auto-migration (development mode)")
-		if err := DB.AutoMigrate(&Problem{}); err != nil {
+		if err := models.AutoMigrate(DB); err != nil {
 			return fmt.Errorf("failed to auto-migrate: %w", err)
 		}
 	}
 
 	log.Println("Database connected successfully")
 	return nil
-}
-
-func setupRoutes(app *fiber.App) {
-	// Health check
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":      "healthy",
-			"app":         cfg.App.Name,
-			"version":     cfg.App.Version,
-			"environment": cfg.App.Environment,
-		})
-	})
-
-	// API v1 routes
-	api := app.Group("/api")
-
-	// Problems endpoints
-	api.Get("/problems", func(c *fiber.Ctx) error {
-		minDiff := c.QueryFloat("min_difficulty", 0)
-		maxDiff := c.QueryFloat("max_difficulty", 100)
-		limit := c.QueryInt("limit", 20)
-
-		var problems []Problem
-		result := DB.Where("difficulty_score BETWEEN ? AND ?", minDiff, maxDiff).
-			Limit(limit).
-			Find(&problems)
-
-		if result.Error != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": result.Error.Error(),
-			})
-		}
-
-		return c.JSON(fiber.Map{
-			"problems": problems,
-			"count":    len(problems),
-		})
-	})
-
-	api.Get("/problems/:id", func(c *fiber.Ctx) error {
-		id, err := c.ParamsInt("id")
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid problem ID",
-			})
-		}
-
-		var problem Problem
-		result := DB.First(&problem, id)
-		if result.Error != nil {
-			if result.Error == gorm.ErrRecordNotFound {
-				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-					"error": "Problem not found",
-				})
-			}
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": result.Error.Error(),
-			})
-		}
-
-		return c.JSON(problem)
-	})
-
-	// Config endpoint (dev only)
-	if cfg.IsDevelopment() {
-		api.Get("/config", func(c *fiber.Ctx) error {
-			// Return safe config values (no secrets)
-			return c.JSON(fiber.Map{
-				"app":      cfg.App,
-				"server":   cfg.Server,
-				"database": fiber.Map{"host": cfg.Database.Host, "database": cfg.Database.Database},
-				"chromadb": fiber.Map{"url": cfg.ChromaDB.URL},
-				"ollama":   fiber.Map{"url": cfg.Ollama.URL},
-				"rag":      cfg.RAG,
-			})
-		})
-	}
 }
 
 func main() {
@@ -197,6 +109,12 @@ func main() {
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 			}
+
+			// Log error in development
+			if cfg.IsDevelopment() {
+				log.Printf("Error: %v", err)
+			}
+
 			return c.Status(code).JSON(fiber.Map{
 				"error": err.Error(),
 			})
@@ -214,20 +132,21 @@ func main() {
 
 	// CORS configuration from config
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.Server.CORS.AllowOrigins[0], // Note: Fiber expects string, not []string
+		AllowOrigins:     cfg.Server.CORS.AllowOrigins[0], // Fiber expects string, not []string
 		AllowMethods:     cfg.Server.CORS.AllowMethods[0],
 		AllowHeaders:     cfg.Server.CORS.AllowHeaders[0],
 		AllowCredentials: cfg.Server.CORS.AllowCredentials,
 		MaxAge:           cfg.Server.CORS.MaxAge,
 	}))
 
-	// Setup routes
-	setupRoutes(app)
+	// Setup all routes
+	routes.SetupRoutes(app, DB, cfg)
 
 	// Start server in goroutine
 	go func() {
 		addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 		log.Printf("Server listening on %s", addr)
+		log.Printf("API Documentation: http://localhost:%d/api", cfg.Server.Port)
 		if err := app.Listen(addr); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}
