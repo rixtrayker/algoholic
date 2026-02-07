@@ -166,9 +166,9 @@ VALUES (1, 'Two Sum', 'two-sum',
     15.5, 'Hash Table');
 ```
 
-### 4. Backend
+### 4. Backend Setup
 
-Create `backend/go.mod`:
+Initialize backend:
 
 ```bash
 cd backend
@@ -176,114 +176,58 @@ go mod init github.com/yourusername/algoholic
 go get github.com/gofiber/fiber/v2
 go get gorm.io/gorm
 go get gorm.io/driver/postgres
-go get github.com/joho/godotenv
+go get github.com/knadh/koanf/v2
+go get github.com/knadh/koanf/parsers/yaml
+go get github.com/knadh/koanf/providers/env
+go get github.com/knadh/koanf/providers/file
+go get github.com/knadh/koanf/providers/structs
 ```
 
-Create `backend/main.go`:
+### 5. Configuration
 
-```go
-package main
+The backend uses [koanf](https://github.com/knadh/koanf) for configuration management with the following priority:
 
-import (
-    "fmt"
-    "log"
-    "os"
+1. **Default values** (lowest priority)
+2. **config.yaml file** (medium priority)
+3. **Environment variables** (highest priority)
 
-    "github.com/gofiber/fiber/v2"
-    "github.com/gofiber/fiber/v2/middleware/cors"
-    "github.com/joho/godotenv"
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
-)
+Copy the example files:
 
-type Problem struct {
-    ProblemID       int     `json:"problem_id" gorm:"primaryKey;column:problem_id"`
-    LeetcodeNumber  *int    `json:"leetcode_number,omitempty" gorm:"column:leetcode_number"`
-    Title           string  `json:"title" gorm:"column:title"`
-    Description     string  `json:"description" gorm:"column:description"`
-    DifficultyScore float64 `json:"difficulty_score" gorm:"column:difficulty_score"`
-    PrimaryPattern  *string `json:"primary_pattern,omitempty" gorm:"column:primary_pattern"`
-}
-
-func (Problem) TableName() string {
-    return "problems"
-}
-
-var DB *gorm.DB
-
-func initDB() {
-    dsn := os.Getenv("DATABASE_URL")
-    if dsn == "" {
-        dsn = "host=localhost user=leetcode password=leetcode123 dbname=leetcode_training port=5432 sslmode=disable"
-    }
-
-    var err error
-    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-    if err != nil {
-        log.Fatal("Failed to connect to database:", err)
-    }
-
-    log.Println("Database connected successfully")
-}
-
-func main() {
-    godotenv.Load()
-    initDB()
-
-    app := fiber.New(fiber.Config{
-        AppName: "Algoholic API v1.0.0",
-    })
-
-    app.Use(cors.New(cors.Config{
-        AllowOrigins: "*",
-        AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
-        AllowHeaders: "*",
-    }))
-
-    app.Get("/health", func(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"status": "healthy"})
-    })
-
-    app.Get("/api/problems", func(c *fiber.Ctx) error {
-        minDiff := c.QueryFloat("min_difficulty", 0)
-        maxDiff := c.QueryFloat("max_difficulty", 100)
-        limit := c.QueryInt("limit", 20)
-
-        var problems []Problem
-        result := DB.Where("difficulty_score BETWEEN ? AND ?", minDiff, maxDiff).
-            Limit(limit).
-            Find(&problems)
-
-        if result.Error != nil {
-            return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
-        }
-
-        return c.JSON(problems)
-    })
-
-    app.Get("/api/problems/:id", func(c *fiber.Ctx) error {
-        id, err := c.ParamsInt("id")
-        if err != nil {
-            return c.Status(400).JSON(fiber.Map{"error": "Invalid problem ID"})
-        }
-
-        var problem Problem
-        result := DB.First(&problem, id)
-        if result.Error != nil {
-            if result.Error == gorm.ErrRecordNotFound {
-                return c.Status(404).JSON(fiber.Map{"error": "Problem not found"})
-            }
-            return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
-        }
-
-        return c.JSON(problem)
-    })
-
-    log.Fatal(app.Listen(":4000"))
-}
+```bash
+cp .env.example .env
+# Edit .env with your values
 ```
 
-### 5. Database Migrations
+All environment variables must be prefixed with `ALGOHOLIC_`. For example:
+
+```bash
+ALGOHOLIC_SERVER_PORT=5000
+ALGOHOLIC_DATABASE_HOST=db.example.com
+ALGOHOLIC_OLLAMA_URL=http://ollama:11434
+```
+
+Configuration file structure (`config.yaml`):
+
+```yaml
+app:
+  name: "Algoholic API"
+  environment: "development"  # development, staging, production
+  debug: true
+
+server:
+  port: 4000
+
+database:
+  host: "localhost"
+  port: 5432
+  database: "leetcode_training"
+
+# See config.yaml for full configuration options
+```
+
+The backend code is structured with koanf configuration. See `backend/main.go` and `backend/config/config.go` for the full implementation.
+
+### 6. Database Migrations
 
 Install golang-migrate:
 
@@ -314,7 +258,7 @@ CREATE TABLE problems (
 CREATE INDEX idx_problems_difficulty ON problems(difficulty_score);
 ```
 
-### 6. Start Everything
+### 7. Start Everything
 
 ```bash
 # Start infrastructure
@@ -333,7 +277,7 @@ cd backend
 go run main.go
 ```
 
-### 7. Verify
+### 8. Verify
 
 ```bash
 curl http://localhost:4000/health                    # API health
