@@ -31,7 +31,8 @@
 └────────────────────────┬────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────┐
-│                  Backend (FastAPI)                   │
+│                  Backend (Go + Fiber)                │
+│              (GORM + golang-migrate)                 │
 └──┬──────────┬──────────┬──────────┬─────────────────┘
    │          │          │          │
 ┌──▼────────┐┌▼────────┐┌▼────────┐┌▼──────────────┐
@@ -451,13 +452,27 @@ Local: `all-MiniLM-L6-v2` (384 dims, fast) or `bge-large-en-v1.5` (1024 dims, be
 User Query → Embed → Vector Search (top-k) → Retrieve from PostgreSQL → Augment Prompt → LLM → Response
 ```
 
-```python
-def rag_query(user_query: str, collection: str, k: int = 5):
-    results = vector_db.query(query_texts=[user_query], n_results=k)
-    context = "\n\n".join(results['documents'][0])
+```go
+func RAGQuery(userQuery string, collection string, k int) (string, error) {
+    // Query vector DB
+    results, err := vectorDB.Query(userQuery, collection, k)
+    if err != nil {
+        return "", err
+    }
 
-    prompt = f"""Context:\n{context}\n\nQuestion: {user_query}\n\nProvide a clear answer based on the context."""
-    return llm.generate(prompt)
+    // Build context
+    var contextBuilder strings.Builder
+    for _, doc := range results.Documents {
+        contextBuilder.WriteString(doc)
+        contextBuilder.WriteString("\n\n")
+    }
+
+    // Generate prompt
+    prompt := fmt.Sprintf("Context:\n%s\n\nQuestion: %s\n\nProvide a clear answer based on the context.",
+        contextBuilder.String(), userQuery)
+
+    return llm.Generate(prompt)
+}
 ```
 
 ### Sync Strategy
@@ -485,18 +500,34 @@ Traditional Easy/Medium/Hard is too coarse. We use a multi-dimensional 0-100 sco
 
 ### Calculation
 
-```python
-def calculate_difficulty_score(problem) -> float:
-    scores = {
-        'conceptual': score_conceptual(problem),      # 0-100
-        'algorithm': score_algorithm(problem),          # 0-100
-        'implementation': score_implementation(problem), # 0-100
-        'pattern': score_pattern_recognition(problem),   # 0-100
-        'edge_cases': score_edge_cases(problem),         # 0-100
-        'time_pressure': score_time_pressure(problem),   # 0-100
+```go
+func CalculateDifficultyScore(problem *Problem) float64 {
+    scores := map[string]float64{
+        "conceptual":     ScoreConceptual(problem),      // 0-100
+        "algorithm":      ScoreAlgorithm(problem),       // 0-100
+        "implementation": ScoreImplementation(problem),  // 0-100
+        "pattern":        ScorePatternRecognition(problem), // 0-100
+        "edge_cases":     ScoreEdgeCases(problem),       // 0-100
+        "time_pressure":  ScoreTimePressure(problem),    // 0-100
     }
-    weights = [0.25, 0.20, 0.15, 0.20, 0.10, 0.10]
-    return sum(s * w for s, w in zip(scores.values(), weights))
+
+    weights := []float64{0.25, 0.20, 0.15, 0.20, 0.10, 0.10}
+    scoreValues := []float64{
+        scores["conceptual"],
+        scores["algorithm"],
+        scores["implementation"],
+        scores["pattern"],
+        scores["edge_cases"],
+        scores["time_pressure"],
+    }
+
+    total := 0.0
+    for i, score := range scoreValues {
+        total += score * weights[i]
+    }
+
+    return total
+}
 ```
 
 ### Tiers
@@ -517,12 +548,23 @@ Difficulty adjusts based on actual user performance (success rate, average time)
 
 ### Personalized Difficulty
 
-```python
-def personalized_difficulty(problem_id, user_id):
-    base = get_difficulty(problem_id)
-    user_proficiency = get_avg_proficiency(user_id, get_problem_topics(problem_id))
-    adjustment = (50 - user_proficiency) * 0.6  # Strong user → easier, weak → harder
+```go
+func PersonalizedDifficulty(problemID, userID int) float64 {
+    base := GetDifficulty(problemID)
+    userProficiency := GetAvgProficiency(userID, GetProblemTopics(problemID))
+    adjustment := (50 - userProficiency) * 0.6 // Strong user → easier, weak → harder
     return clamp(base + adjustment, 0, 100)
+}
+
+func clamp(value, min, max float64) float64 {
+    if value < min {
+        return min
+    }
+    if value > max {
+        return max
+    }
+    return value
+}
 ```
 
 ---
@@ -587,9 +629,17 @@ Understanding = L1 * 0.15 (correct implementation)
 
 ### Severity
 
-```python
-severity = frequency * 0.4 + impact * 0.4 + difficulty_to_fix * 0.2
-# > 0.7 = critical, > 0.5 = major, > 0.3 = minor
+```go
+func CalculateSeverity(frequency, impact, difficultyToFix float64) string {
+    severity := frequency*0.4 + impact*0.4 + difficultyToFix*0.2
+
+    if severity > 0.7 {
+        return "critical"
+    } else if severity > 0.5 {
+        return "major"
+    }
+    return "minor"
+}
 ```
 
 ### Remediation
@@ -750,7 +800,7 @@ services:
 
   backend:
     build: ./backend
-    ports: ["8080:8080"]
+    ports: ["4000:4000"]
     environment:
       DATABASE_URL: postgresql://leetcode:leetcode123@postgres:5432/leetcode_training
       CHROMA_URL: http://chromadb:8000
@@ -772,13 +822,15 @@ volumes:
 
 ```
 backend/
-├── main.py
-├── config.py
-├── database.py
-├── models/          # SQLAlchemy models
+├── main.go
+├── config/          # Configuration
+├── database/        # DB connection and setup
+├── models/          # GORM models
 ├── services/        # Business logic (search, assessment, training, llm, vector)
-├── api/             # FastAPI routes
-└── utils/           # Difficulty calc, graph helpers, embeddings
+├── handlers/        # Fiber route handlers
+├── middleware/      # Auth, logging, etc.
+├── utils/           # Difficulty calc, graph helpers, embeddings
+└── migrations/      # golang-migrate SQL files
 
 frontend/
 ├── src/
@@ -793,7 +845,9 @@ frontend/
 docker-compose up -d
 docker exec -it leetcode_ollama ollama pull mistral:7b
 docker exec -it leetcode_ollama ollama pull codellama:13b
-# Backend: http://localhost:8080/docs
+# Run migrations
+migrate -path migrations -database "postgresql://leetcode:leetcode123@localhost:5432/leetcode_training?sslmode=disable" up
+# Backend: http://localhost:4000
 # Frontend: http://localhost:3000
 ```
 

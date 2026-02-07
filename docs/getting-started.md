@@ -8,7 +8,7 @@
 ```bash
 docker --version          # Docker 20.10+
 docker-compose --version  # Docker Compose 2.0+
-python --version          # Python 3.10+
+go version                # Go 1.21+
 node --version            # Node.js 18+
 ```
 
@@ -168,85 +168,156 @@ VALUES (1, 'Two Sum', 'two-sum',
 
 ### 4. Backend
 
-Create `backend/requirements.txt`:
-
-```
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.9
-python-dotenv==1.0.0
-pydantic==2.5.0
-chromadb==0.4.18
-sentence-transformers==2.2.2
-ollama==0.1.6
-```
-
-Create `backend/main.py`:
-
-```python
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, Float, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
-from typing import List, Optional
-import os
-
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://leetcode:leetcode123@localhost:5432/leetcode_training")
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-app = FastAPI(title="Algoholic API", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-class Problem(Base):
-    __tablename__ = "problems"
-    problem_id = Column(Integer, primary_key=True)
-    leetcode_number = Column(Integer, unique=True)
-    title = Column(String(500), nullable=False)
-    description = Column(Text, nullable=False)
-    difficulty_score = Column(Float, nullable=False)
-    primary_pattern = Column(String(100))
-
-class ProblemResponse(BaseModel):
-    problem_id: int
-    title: str
-    difficulty_score: float
-    primary_pattern: Optional[str]
-    class Config:
-        from_attributes = True
-
-@app.get("/api/problems", response_model=List[ProblemResponse])
-async def get_problems(min_difficulty: float = 0, max_difficulty: float = 100, limit: int = 20, db: Session = Depends(get_db)):
-    return db.query(Problem).filter(Problem.difficulty_score.between(min_difficulty, max_difficulty)).limit(limit).all()
-
-@app.get("/api/problems/{problem_id}", response_model=ProblemResponse)
-async def get_problem(problem_id: int, db: Session = Depends(get_db)):
-    p = db.query(Problem).filter(Problem.problem_id == problem_id).first()
-    if not p: raise HTTPException(404, "Problem not found")
-    return p
-
-@app.get("/health")
-async def health(): return {"status": "healthy"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
-```
-
-### 5. Start Everything
+Create `backend/go.mod`:
 
 ```bash
+cd backend
+go mod init github.com/yourusername/algoholic
+go get github.com/gofiber/fiber/v2
+go get gorm.io/gorm
+go get gorm.io/driver/postgres
+go get github.com/joho/godotenv
+```
+
+Create `backend/main.go`:
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "os"
+
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/cors"
+    "github.com/joho/godotenv"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
+)
+
+type Problem struct {
+    ProblemID       int     `json:"problem_id" gorm:"primaryKey;column:problem_id"`
+    LeetcodeNumber  *int    `json:"leetcode_number,omitempty" gorm:"column:leetcode_number"`
+    Title           string  `json:"title" gorm:"column:title"`
+    Description     string  `json:"description" gorm:"column:description"`
+    DifficultyScore float64 `json:"difficulty_score" gorm:"column:difficulty_score"`
+    PrimaryPattern  *string `json:"primary_pattern,omitempty" gorm:"column:primary_pattern"`
+}
+
+func (Problem) TableName() string {
+    return "problems"
+}
+
+var DB *gorm.DB
+
+func initDB() {
+    dsn := os.Getenv("DATABASE_URL")
+    if dsn == "" {
+        dsn = "host=localhost user=leetcode password=leetcode123 dbname=leetcode_training port=5432 sslmode=disable"
+    }
+
+    var err error
+    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatal("Failed to connect to database:", err)
+    }
+
+    log.Println("Database connected successfully")
+}
+
+func main() {
+    godotenv.Load()
+    initDB()
+
+    app := fiber.New(fiber.Config{
+        AppName: "Algoholic API v1.0.0",
+    })
+
+    app.Use(cors.New(cors.Config{
+        AllowOrigins: "*",
+        AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+        AllowHeaders: "*",
+    }))
+
+    app.Get("/health", func(c *fiber.Ctx) error {
+        return c.JSON(fiber.Map{"status": "healthy"})
+    })
+
+    app.Get("/api/problems", func(c *fiber.Ctx) error {
+        minDiff := c.QueryFloat("min_difficulty", 0)
+        maxDiff := c.QueryFloat("max_difficulty", 100)
+        limit := c.QueryInt("limit", 20)
+
+        var problems []Problem
+        result := DB.Where("difficulty_score BETWEEN ? AND ?", minDiff, maxDiff).
+            Limit(limit).
+            Find(&problems)
+
+        if result.Error != nil {
+            return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+        }
+
+        return c.JSON(problems)
+    })
+
+    app.Get("/api/problems/:id", func(c *fiber.Ctx) error {
+        id, err := c.ParamsInt("id")
+        if err != nil {
+            return c.Status(400).JSON(fiber.Map{"error": "Invalid problem ID"})
+        }
+
+        var problem Problem
+        result := DB.First(&problem, id)
+        if result.Error != nil {
+            if result.Error == gorm.ErrRecordNotFound {
+                return c.Status(404).JSON(fiber.Map{"error": "Problem not found"})
+            }
+            return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+        }
+
+        return c.JSON(problem)
+    })
+
+    log.Fatal(app.Listen(":4000"))
+}
+```
+
+### 5. Database Migrations
+
+Install golang-migrate:
+
+```bash
+# macOS
+brew install golang-migrate
+
+# Linux
+curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.2/migrate.linux-amd64.tar.gz | tar xvz
+sudo mv migrate /usr/local/bin/
+```
+
+Create `migrations/000001_init_schema.up.sql`:
+
+```sql
+-- Core tables (see docs/architecture.md for full schema)
+CREATE TABLE problems (
+    problem_id SERIAL PRIMARY KEY,
+    leetcode_number INTEGER UNIQUE,
+    title VARCHAR(500) NOT NULL,
+    description TEXT NOT NULL,
+    difficulty_score FLOAT NOT NULL CHECK (difficulty_score >= 0 AND difficulty_score <= 100),
+    primary_pattern VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add indexes
+CREATE INDEX idx_problems_difficulty ON problems(difficulty_score);
+```
+
+### 6. Start Everything
+
+```bash
+# Start infrastructure
 docker-compose up -d
 sleep 30
 
@@ -254,25 +325,26 @@ sleep 30
 docker exec -it algoholic_ollama ollama pull mistral:7b
 docker exec -it algoholic_ollama ollama pull codellama:13b
 
+# Run migrations
+migrate -path migrations -database "postgresql://leetcode:leetcode123@localhost:5432/leetcode_training?sslmode=disable" up
+
 # Start backend
 cd backend
-pip install -r requirements.txt
-python main.py
+go run main.go
 ```
 
-### 6. Verify
+### 7. Verify
 
 ```bash
-curl http://localhost:8080/health                    # API health
-curl http://localhost:8080/api/problems | jq          # List problems
-curl http://localhost:8000/api/v1/heartbeat           # ChromaDB
-docker exec algoholic_ollama ollama list              # LLM models
+curl http://localhost:4000/health                    # API health
+curl http://localhost:4000/api/problems | jq         # List problems
+curl http://localhost:8000/api/v1/heartbeat          # ChromaDB
+docker exec algoholic_ollama ollama list             # LLM models
 docker exec algoholic_postgres psql -U leetcode -d leetcode_training -c "SELECT count(*) FROM problems;"
 ```
 
 **Access points:**
-- API: http://localhost:8080
-- API Docs: http://localhost:8080/docs
+- API: http://localhost:4000
 - ChromaDB: http://localhost:8000
 - Ollama: http://localhost:11434
 
