@@ -31,25 +31,35 @@ api.interceptors.response.use(
 
     const status = error.response.status;
     const errorMessage = error.response.data?.error || error.response.data?.message;
+    const requestUrl = error.config?.url || '';
 
     // Handle specific error codes
     if (status === 401) {
       const currentPath = window.location.pathname;
+      // Don't show toast or redirect for auth/me requests (silent fail for token validation)
+      if (requestUrl.includes('/auth/me')) {
+        return Promise.reject(error);
+      }
       // Only redirect if not already on login page
       if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
         localStorage.removeItem('auth_token');
         toast.error('Session expired. Please login again.');
-        window.location.href = '/login';
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1000);
       }
     } else if (status === 403) {
       toast.error(errorMessage || 'Access denied.');
     } else if (status === 404) {
-      toast.error(errorMessage || 'Resource not found.');
+      // Don't show toast for 404 on stats endpoints - handled by component
+      if (!requestUrl.includes('/stats')) {
+        toast.error(errorMessage || 'Resource not found.');
+      }
     } else if (status === 500) {
       toast.error('Server error. Please try again later.');
     } else if (status >= 400 && status < 500) {
-      // Client errors - show specific message
-      if (errorMessage) {
+      // Client errors - show specific message (but not for auth endpoints, handled by component)
+      if (errorMessage && !requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/register')) {
         toast.error(errorMessage);
       }
     }

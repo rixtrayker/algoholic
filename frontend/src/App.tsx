@@ -30,8 +30,12 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    // Only fetch user once when component mounts
+    if (!isAuthenticated) {
+      fetchUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps array - only run once
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
