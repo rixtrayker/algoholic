@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { trainingPlansAPI, TrainingPlan } from '../lib/api';
+import { trainingPlansAPI } from '../lib/api';
+import type { TrainingPlan } from '../lib/api';
 import { Calendar, Target, TrendingUp, Play, Pause, Trash2 } from 'lucide-react';
 
 export default function TrainingPlans() {

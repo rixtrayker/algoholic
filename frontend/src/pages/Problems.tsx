@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { problemsAPI, Problem } from '../lib/api';
+import { problemsAPI } from '../lib/api';
+import type { Problem } from '../lib/api';
 import { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 

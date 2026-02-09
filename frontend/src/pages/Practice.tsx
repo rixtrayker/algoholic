@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { questionsAPI, Question } from '../lib/api';
+import { questionsAPI } from '../lib/api';
 import { Clock, CheckCircle, XCircle, Lightbulb, ArrowRight } from 'lucide-react';
 
 export default function Practice() {
