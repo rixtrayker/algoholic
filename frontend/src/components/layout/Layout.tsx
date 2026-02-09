@@ -13,15 +13,15 @@ export default function Layout() {
   };
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/problems', label: 'Problems', icon: Code2 },
-    { path: '/practice', label: 'Practice', icon: Target },
-    { path: '/training-plans', label: 'Training Plans', icon: Dumbbell },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/dashboard/problems', label: 'Problems', icon: Code2 },
+    { path: '/dashboard/practice', label: 'Practice', icon: Target },
+    { path: '/dashboard/training-plans', label: 'Training Plans', icon: Dumbbell },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/') {
-      return location.pathname === '/';
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard';
     }
     return location.pathname.startsWith(path);
   };
@@ -35,7 +35,7 @@ export default function Layout() {
             {/* Logo and Nav Links */}
             <div className="flex items-center space-x-8">
               <Link
-                to="/"
+                to="/dashboard"
                 className="flex items-center gap-2 text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors"
               >
                 <Flame className="w-7 h-7" />
