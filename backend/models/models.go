@@ -281,6 +281,39 @@ func (WeaknessAnalysis) TableName() string {
 	return "weakness_analysis"
 }
 
+// UserList represents a custom problem list created by a user
+type UserList struct {
+	ListID      int       `json:"list_id" gorm:"primaryKey;column:list_id"`
+	UserID      int       `json:"user_id" gorm:"column:user_id;not null;index"`
+	Name        string    `json:"name" gorm:"column:name;not null"`
+	Description *string   `json:"description,omitempty" gorm:"column:description"`
+	IsPublic    bool      `json:"is_public" gorm:"column:is_public;default:false"`
+	ProblemIDs  JSONB     `json:"problem_ids" gorm:"column:problem_ids;type:jsonb;not null;default:'[]'"`
+	TotalItems  int       `json:"total_items" gorm:"column:total_items;default:0"`
+	Completed   int       `json:"completed" gorm:"column:completed;default:0"`
+	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (UserList) TableName() string {
+	return "user_lists"
+}
+
+// DailyActivity tracks user's daily practice activity for commitment chart
+type DailyActivity struct {
+	ActivityID    int       `json:"activity_id" gorm:"primaryKey;column:activity_id"`
+	UserID        int       `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_date"`
+	Date          time.Time `json:"date" gorm:"column:date;not null;uniqueIndex:idx_user_date;type:date"`
+	ProblemsCount int       `json:"problems_count" gorm:"column:problems_count;default:0"`
+	QuestionsCount int      `json:"questions_count" gorm:"column:questions_count;default:0"`
+	StudyTime     int       `json:"study_time_seconds" gorm:"column:study_time_seconds;default:0"`
+	Streak        int       `json:"streak" gorm:"column:streak;default:0"`
+}
+
+func (DailyActivity) TableName() string {
+	return "daily_activities"
+}
+
 // AutoMigrate runs all model migrations
 func AutoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
@@ -295,5 +328,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&TrainingPlanItem{},
 		&Assessment{},
 		&WeaknessAnalysis{},
+		&UserList{},
+		&DailyActivity{},
 	)
 }

@@ -25,6 +25,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	questionHandler := handlers.NewQuestionHandler(questionService, userService)
 	userHandler := handlers.NewUserHandler(userService, questionService)
 	trainingPlanHandler := handlers.NewTrainingPlanHandler(trainingPlanService)
+	listHandler := handlers.NewListHandler(db)
+	activityHandler := handlers.NewActivityHandler(db)
 
 	// Public routes
 	api := app.Group("/api")
@@ -97,6 +99,24 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	plans.Post("/:id/pause", trainingPlanHandler.PausePlan)
 	plans.Post("/:id/resume", trainingPlanHandler.ResumePlan)
 	plans.Delete("/:id", trainingPlanHandler.DeletePlan)
+
+	// User Lists routes (all protected)
+	lists := protected.Group("/lists")
+	lists.Get("/", listHandler.GetUserLists)
+	lists.Post("/", listHandler.CreateList)
+	lists.Get("/:id", listHandler.GetList)
+	lists.Put("/:id", listHandler.UpdateList)
+	lists.Delete("/:id", listHandler.DeleteList)
+	lists.Post("/:id/problems", listHandler.AddProblemToList)
+	lists.Delete("/:id/problems/:problemId", listHandler.RemoveProblemFromList)
+	lists.Get("/:id/problems", listHandler.GetListProblems)
+
+	// Activity routes (all protected)
+	activity := protected.Group("/activity")
+	activity.Get("/chart", activityHandler.GetActivityChart)
+	activity.Get("/stats", activityHandler.GetActivityStats)
+	activity.Get("/history", activityHandler.GetPracticeHistory)
+	activity.Post("/record", activityHandler.RecordActivity)
 
 	// Development-only routes
 	if cfg.IsDevelopment() {

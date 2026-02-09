@@ -342,3 +342,78 @@ export const topicsAPI = {
     return data;
   },
 };
+
+// Lists API
+export const listsAPI = {
+  getLists: async () => {
+    const { data } = await api.get('/lists');
+    return data;
+  },
+
+  getList: async (id: number) => {
+    const { data } = await api.get(`/lists/${id}`);
+    return data;
+  },
+
+  createList: async (listData: {
+    name: string;
+    description?: string;
+    is_public: boolean;
+  }) => {
+    const { data } = await api.post('/lists', listData);
+    return data;
+  },
+
+  updateList: async (id: number, listData: {
+    name?: string;
+    description?: string;
+    is_public?: boolean;
+  }) => {
+    const { data } = await api.put(`/lists/${id}`, listData);
+    return data;
+  },
+
+  deleteList: async (id: number) => {
+    await api.delete(`/lists/${id}`);
+  },
+
+  addProblem: async (listId: number, problemId: number) => {
+    const { data } = await api.post(`/lists/${listId}/problems`, { problem_id: problemId });
+    return data;
+  },
+
+  removeProblem: async (listId: number, problemId: number) => {
+    await api.delete(`/lists/${listId}/problems/${problemId}`);
+  },
+
+  getListProblems: async (listId: number) => {
+    const { data } = await api.get(`/lists/${listId}/problems`);
+    return data;
+  },
+};
+
+// Activity API
+export const activityAPI = {
+  getActivityChart: async (days = 365) => {
+    const { data } = await api.get('/activity/chart', { params: { days } });
+    return data;
+  },
+
+  getActivityStats: async () => {
+    const { data } = await api.get('/activity/stats');
+    return data;
+  },
+
+  getPracticeHistory: async (days = 30) => {
+    const { data } = await api.get('/activity/history', { params: { days } });
+    return data;
+  },
+
+  recordActivity: async (activityData: {
+    problems_count: number;
+    questions_count: number;
+    study_time_seconds: number;
+  }) => {
+    await api.post('/activity/record', activityData);
+  },
+};

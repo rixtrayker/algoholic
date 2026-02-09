@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { LayoutDashboard, Code2, Dumbbell, Target, LogOut, Flame } from 'lucide-react';
+import { LayoutDashboard, Code2, Dumbbell, Target, LogOut, Flame, User, List } from 'lucide-react';
 
 export default function Layout() {
   const { user, logout } = useAuthStore();
@@ -17,6 +17,8 @@ export default function Layout() {
     { path: '/dashboard/problems', label: 'Problems', icon: Code2 },
     { path: '/dashboard/practice', label: 'Practice', icon: Target },
     { path: '/dashboard/training-plans', label: 'Training Plans', icon: Dumbbell },
+    { path: '/dashboard/lists', label: 'Lists', icon: List },
+    { path: '/dashboard/profile', label: 'Profile', icon: User },
   ];
 
   const isActive = (path: string) => {

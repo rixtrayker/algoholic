@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard';
 import Problems from './pages/Problems';
 import Practice from './pages/Practice';
 import TrainingPlans from './pages/TrainingPlans';
+import Profile from './pages/Profile';
+import Lists from './pages/Lists';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -97,6 +99,8 @@ function App() {
             <Route path="problems" element={<Problems />} />
             <Route path="practice" element={<Practice />} />
             <Route path="training-plans" element={<TrainingPlans />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="lists" element={<Lists />} />
           </Route>
 
           {/* Catch all - redirect to login */}
