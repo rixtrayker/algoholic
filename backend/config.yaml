@@ -40,7 +40,7 @@ database:
   max_idle_conns: 5
   conn_max_lifetime: 30  # minutes
   log_level: "warn"       # silent, error, warn, info
-  auto_migrate: false     # WARNING: only enable in development
+  auto_migrate: true      # WARNING: only enable in development
 
 redis:
   enabled: false

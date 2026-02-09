@@ -1,0 +1,3480 @@
+{
+  "collection": {
+    "item": [
+      {
+        "id": "668466d6-a11e-4e78-bb50-21686f84c56b",
+        "name": "Authentication",
+        "item": [
+          {
+            "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+            "name": "Register User",
+            "request": {
+              "description": {
+                "content": "Register a new user account",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "register"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+              }
+            },
+            "response": [
+              {
+                "_": {
+                  "postman_previewlanguage": "json"
+                },
+                "id": "e492d2e1-a6f0-443f-9235-a4f6a2a7d047",
+                "name": "Successful Registration",
+                "originalRequest": {
+                  "url": {
+                    "path": [
+                      "api",
+                      "auth",
+                      "register"
+                    ],
+                    "host": [
+                      "{{base_url}}"
+                    ],
+                    "query": [],
+                    "variable": []
+                  },
+                  "method": "POST",
+                  "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                    "options": {
+                      "raw": {
+                        "language": "json"
+                      }
+                    }
+                  }
+                },
+                "status": "Created",
+                "code": 201,
+                "header": [],
+                "body": "{\n  \"user\": {\n    \"user_id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"current_streak_days\": 0,\n    \"total_study_time_seconds\": 0\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+                "cookie": []
+              }
+            ],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "e5de7ccf-2d55-49ff-bfc4-b094dd12663e",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 201\", function () {",
+                    "    pm.response.to.have.status(201);",
+                    "});",
+                    "",
+                    "pm.test(\"Response has user and token\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('user');",
+                    "    pm.expect(jsonData).to.have.property('token');",
+                    "});",
+                    "",
+                    "pm.test(\"User has required fields\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData.user).to.have.property('user_id');",
+                    "    pm.expect(jsonData.user).to.have.property('username');",
+                    "    pm.expect(jsonData.user).to.have.property('email');",
+                    "});",
+                    "",
+                    "// Save token and user_id for subsequent requests",
+                    "if (pm.response.code === 201) {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                    "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                    "}"
+                  ],
+                  "_lastExecutionId": "abcf3dac-2530-48a5-894f-e297a7fd183a"
+                }
+              }
+            ]
+          },
+          {
+            "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+            "name": "Login",
+            "request": {
+              "description": {
+                "content": "Login with username and password",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+              },
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response has user and token\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('user');",
+                    "    pm.expect(jsonData).to.have.property('token');",
+                    "});",
+                    "",
+                    "// Save token for subsequent requests",
+                    "if (pm.response.code === 200) {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                    "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                    "}"
+                  ],
+                  "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+                }
+              }
+            ]
+          },
+          {
+            "id": "663302fe-2829-43c9-a291-ed71e4f79b76",
+            "name": "Get Current User",
+            "request": {
+              "description": {
+                "content": "Get currently authenticated user",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "auth",
+                  "me"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "8cc8c9a1-4d66-4f19-9d6e-09faaebb9938",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"User object is returned\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('user_id');",
+                    "    pm.expect(jsonData).to.have.property('username');",
+                    "    pm.expect(jsonData).to.have.property('email');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "b65e81b9-db41-4879-a2c3-90401ebbf2e6",
+        "name": "Questions",
+        "item": [
+          {
+            "id": "833968cb-c914-482e-83d5-64af2348241b",
+            "name": "Get Random Question",
+            "request": {
+              "description": {
+                "content": "Get a random question based on spaced repetition algorithm",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "questions",
+                  "random"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "df84d8be-4dba-48fc-ac4c-bae45131b18b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Question has required fields\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('question_id');",
+                    "    pm.expect(jsonData).to.have.property('question_text');",
+                    "    pm.expect(jsonData).to.have.property('question_type');",
+                    "    pm.expect(jsonData).to.have.property('difficulty_score');",
+                    "});",
+                    "",
+                    "// Save question_id for answer submission",
+                    "var jsonData = pm.response.json();",
+                    "pm.collectionVariables.set(\"question_id\", jsonData.question_id);"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "462e03ca-d80b-4c07-99fa-c170b012fb3b",
+            "name": "Get Random Question with Filters",
+            "request": {
+              "description": {
+                "content": "Get a random question with topic and difficulty filters",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "questions",
+                  "random"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [
+                  {
+                    "key": "topic",
+                    "value": "Arrays"
+                  },
+                  {
+                    "key": "difficulty_min",
+                    "value": "40"
+                  },
+                  {
+                    "key": "difficulty_max",
+                    "value": "60"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "89ab7305-ff89-4c67-8ab1-0cb871ce2bc0",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Question matches filters\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData.difficulty_score).to.be.within(40, 60);",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "6fdecbd9-052d-4ca9-b4ac-b76804cc0530",
+            "name": "Submit Answer",
+            "request": {
+              "description": {
+                "content": "Submit an answer to a question",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "questions",
+                  "{{question_id}}",
+                  "answer"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"answer\": \"A\",\n  \"time_taken_seconds\": 45\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "686b7e82-9548-49d7-9adf-fc366a512b88",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response has correctness info\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('is_correct');",
+                    "    pm.expect(jsonData).to.have.property('correct_answer');",
+                    "    pm.expect(jsonData).to.have.property('explanation');",
+                    "});",
+                    "",
+                    "pm.test(\"Points earned is present\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('points_earned');",
+                    "    pm.expect(jsonData.points_earned).to.be.a('number');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "761fca63-7a43-4c56-90dd-f7372d919af5",
+            "name": "Request Hint",
+            "request": {
+              "description": {
+                "content": "Get a hint for a question",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "questions",
+                  "{{question_id}}",
+                  "hint"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "e7f6ece4-fa75-4dbe-8cf8-0d59f2564bac",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Hint is returned\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('hint');",
+                    "    pm.expect(jsonData.hint).to.be.a('string');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "880ed280-492d-4896-97d3-4e4fca0de199",
+        "name": "Problems",
+        "item": [
+          {
+            "id": "d293f608-3c1c-40b8-8425-cf208c2e44ae",
+            "name": "List Problems",
+            "request": {
+              "description": {
+                "content": "Get list of problems with pagination",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "problems"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [
+                  {
+                    "key": "limit",
+                    "value": "20"
+                  },
+                  {
+                    "key": "offset",
+                    "value": "0"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "7aa5dda6-f9fc-429c-aa6b-cff1d558748e",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});",
+                    "",
+                    "if (pm.response.json().length > 0) {",
+                    "    pm.test(\"First problem has required fields\", function () {",
+                    "        var problem = pm.response.json()[0];",
+                    "        pm.expect(problem).to.have.property('problem_id');",
+                    "        pm.expect(problem).to.have.property('title');",
+                    "        pm.expect(problem).to.have.property('difficulty');",
+                    "    });",
+                    "    ",
+                    "    // Save first problem_id",
+                    "    pm.collectionVariables.set(\"problem_id\", pm.response.json()[0].problem_id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "1e803cfd-7345-4512-8f87-e030c08033c4",
+            "name": "Get Problem by ID",
+            "request": {
+              "description": {
+                "content": "Get detailed information about a specific problem",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "problems",
+                  "{{problem_id}}"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "ab9d48b9-fa2e-4dca-93f0-c34d1e776ac8",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Problem has complete details\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('problem_id');",
+                    "    pm.expect(jsonData).to.have.property('title');",
+                    "    pm.expect(jsonData).to.have.property('description');",
+                    "    pm.expect(jsonData).to.have.property('difficulty');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "31358ad2-fd32-4387-859a-cf5db9464714",
+            "name": "Get Problem Questions",
+            "request": {
+              "description": {
+                "content": "Get all questions for a specific problem",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "problems",
+                  "{{problem_id}}",
+                  "questions"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "cdcdde41-362c-4b12-8730-4760069005cb",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array of questions\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "cb12147e-0f83-4e64-92a7-4781b0fc2ac3",
+            "name": "Search Problems",
+            "request": {
+              "description": {
+                "content": "Search problems by keyword, difficulty, and topic",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "problems",
+                  "search"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [
+                  {
+                    "key": "q",
+                    "value": "array"
+                  },
+                  {
+                    "key": "difficulty",
+                    "value": "Easy"
+                  },
+                  {
+                    "key": "topic",
+                    "value": "Arrays"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "c0068ed4-e558-4ce5-a1ea-065e125d9797",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Results match search criteria\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "7547914c-6986-4bc1-8e3a-f3b9b1b3360b",
+        "name": "User Stats & Progress",
+        "item": [
+          {
+            "id": "7da5a160-b225-4389-a4f9-998b1c060610",
+            "name": "Get User Stats",
+            "request": {
+              "description": {
+                "content": "Get current user's statistics and progress",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "users",
+                  "stats"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "9de3a779-52a6-4170-abd3-0ad2c25964f7",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Stats have required fields\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('total_attempts');",
+                    "    pm.expect(jsonData).to.have.property('correct_attempts');",
+                    "    pm.expect(jsonData).to.have.property('accuracy_rate');",
+                    "    pm.expect(jsonData).to.have.property('current_streak_days');",
+                    "    pm.expect(jsonData).to.have.property('strong_topics');",
+                    "    pm.expect(jsonData).to.have.property('weak_topics');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "ae20941d-6628-4908-9935-f259d2475bae",
+            "name": "Get Progress History",
+            "request": {
+              "description": {
+                "content": "Get user's progress history over specified number of days",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "users",
+                  "progress"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [
+                  {
+                    "key": "days",
+                    "value": "30"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "7dbf1d70-bdd2-4d25-89ac-df68012b25e7",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "005c0e6b-feb2-4813-be31-7bba58e5609e",
+            "name": "Get Attempt History",
+            "request": {
+              "description": {
+                "content": "Get user's question attempt history",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "users",
+                  "attempts"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [
+                  {
+                    "key": "limit",
+                    "value": "50"
+                  }
+                ],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "ae62e0e6-d17b-4d96-ae5e-b724faf2ac58",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array of attempts\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "f7d554f8-4764-4a4c-9cd6-8a10ce109934",
+        "name": "Training Plans",
+        "item": [
+          {
+            "id": "8b7d7eff-ad78-422f-8d34-2af94b73814a",
+            "name": "List Available Plans",
+            "request": {
+              "description": {
+                "content": "Get list of all available training plans",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "plans"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "a9dc7bef-24fa-494b-94e4-6928a2b9b770",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array of plans\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});",
+                    "",
+                    "if (pm.response.json().length > 0) {",
+                    "    pm.collectionVariables.set(\"plan_id\", pm.response.json()[0].plan_id);",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "3177be9e-cac1-463b-b3e4-05463934da92",
+            "name": "Get Plan Details",
+            "request": {
+              "description": {
+                "content": "Get detailed information about a specific training plan",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "plans",
+                  "{{plan_id}}"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "93509da8-b81c-4bf2-858e-2f1f405c06ed",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Plan has required fields\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('plan_id');",
+                    "    pm.expect(jsonData).to.have.property('name');",
+                    "    pm.expect(jsonData).to.have.property('description');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "36c4b45d-6e89-4c54-abef-9e1ffff83213",
+            "name": "Enroll in Plan",
+            "request": {
+              "description": {
+                "content": "Enroll user in a training plan",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "plans",
+                  "{{plan_id}}",
+                  "enroll"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "POST"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "3c99ed01-e838-4402-a1a2-961852acf9ec",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 201\", function () {",
+                    "    pm.response.to.have.status(201);",
+                    "});",
+                    "",
+                    "pm.test(\"Enrollment confirmed\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('enrollment_id');",
+                    "    pm.expect(jsonData).to.have.property('plan_id');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "c7892e40-605b-4852-abdf-e4c9b557cfe1",
+            "name": "Get My Plans",
+            "request": {
+              "description": {
+                "content": "Get user's enrolled training plans",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "users",
+                  "plans"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "58a7f2ba-6a05-4c62-bf0f-7124ec50c1e5",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "c498c1ff-befd-4dd4-a113-3bb7dcff19df",
+            "name": "Update Plan Progress",
+            "request": {
+              "description": {
+                "content": "Update progress for an enrolled training plan",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "plans",
+                  "{{plan_id}}",
+                  "progress"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "PUT",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"completed_items\": 5,\n  \"current_day\": 7\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "44166305-4e49-422a-b1ae-1c4a1e9c65ab",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Progress updated\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('progress_percentage');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "9290ba81-2cdc-4704-b727-13cb6742ac09",
+        "name": "Topics",
+        "item": [
+          {
+            "id": "2aeb2ace-549d-49cf-aa04-44d937f90e53",
+            "name": "List All Topics",
+            "request": {
+              "description": {
+                "content": "Get list of all available topics",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "topics"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "76befa29-3206-48d7-919b-76caa8c261a9",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response is an array of topics\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.be.an('array');",
+                    "});",
+                    "",
+                    "if (pm.response.json().length > 0) {",
+                    "    pm.test(\"Topics have required fields\", function () {",
+                    "        var topic = pm.response.json()[0];",
+                    "        pm.expect(topic).to.have.property('topic_id');",
+                    "        pm.expect(topic).to.have.property('name');",
+                    "    });",
+                    "}"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "1425697b-1b4f-4a36-b62f-5a4cb3b6f0bb",
+            "name": "Get Topic Performance",
+            "request": {
+              "description": {
+                "content": "Get user's performance for a specific topic",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "users",
+                  "topics",
+                  "1",
+                  "performance"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET"
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "0f371905-0ea3-400c-b9f9-a04302cdc080",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Performance data is returned\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('topic_name');",
+                    "    pm.expect(jsonData).to.have.property('accuracy_rate');",
+                    "    pm.expect(jsonData).to.have.property('total_attempts');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "6ee887d3-0497-48a8-a313-5db7b2507531",
+        "name": "Health Check",
+        "item": [
+          {
+            "id": "81671298-1853-4a25-9281-797323d6a6ac",
+            "name": "API Health",
+            "request": {
+              "description": {
+                "content": "Check API health status",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "health"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "method": "GET",
+              "auth": {
+                "type": "noauth",
+                "noauth": []
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "b0f92e34-b839-4c62-aea0-6bb3c79bd41b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test(\"Status code is 200\", function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test(\"Response has status\", function () {",
+                    "    var jsonData = pm.response.json();",
+                    "    pm.expect(jsonData).to.have.property('status');",
+                    "    pm.expect(jsonData.status).to.eql('healthy');",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      }
+    ],
+    "auth": {
+      "type": "bearer",
+      "bearer": [
+        {
+          "type": "string",
+          "value": "{{auth_token}}",
+          "key": "token"
+        }
+      ]
+    },
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "id": "acdcd62f-3449-4893-9e52-262d7da958f5",
+          "type": "text/javascript",
+          "exec": [
+            ""
+          ],
+          "_lastExecutionId": "1cf74d07-5474-4641-a523-4116c38cb056"
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "id": "4bcfdab0-176a-4612-a067-1be487a75498",
+          "type": "text/javascript",
+          "exec": [
+            ""
+          ],
+          "_lastExecutionId": "d7e71ae3-84ae-40c3-9d98-89b5b14ae4cf"
+        }
+      }
+    ],
+    "variable": [
+      {
+        "type": "string",
+        "value": "http://localhost:4000",
+        "key": "base_url"
+      },
+      {
+        "type": "string",
+        "value": "",
+        "key": "auth_token"
+      },
+      {
+        "type": "string",
+        "value": "",
+        "key": "user_id"
+      },
+      {
+        "type": "string",
+        "value": "",
+        "key": "question_id"
+      },
+      {
+        "type": "string",
+        "value": "",
+        "key": "problem_id"
+      },
+      {
+        "type": "string",
+        "value": "",
+        "key": "plan_id"
+      }
+    ],
+    "info": {
+      "_postman_id": "b1e51fcc-4f20-468c-a199-d3f57e1510b5",
+      "name": "Algoholic API",
+      "version": {
+        "raw": "1.0.0",
+        "major": 1,
+        "minor": 0,
+        "patch": 0,
+        "prerelease": [],
+        "build": [],
+        "string": "1.0.0"
+      },
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": {
+        "content": "Complete API collection for Algoholic - LeetCode practice platform with spaced repetition",
+        "type": "text/plain"
+      }
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment"
+    },
+    "id": "algoholic-local-env",
+    "name": "Algoholic - Local",
+    "values": [
+      {
+        "type": "any",
+        "value": "http://localhost:4000",
+        "key": "base_url"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "auth_token"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "user_id"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "question_id"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "problem_id"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "plan_id"
+      }
+    ]
+  },
+  "globals": {
+    "id": "73d6323f-1e92-49eb-8b42-2a6d4706d858",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 6,
+        "pending": 0,
+        "failed": 1
+      },
+      "prerequests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 5,
+        "pending": 0,
+        "failed": 2
+      },
+      "testScripts": {
+        "total": 4,
+        "pending": 0,
+        "failed": 1
+      },
+      "prerequestScripts": {
+        "total": 2,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 53.5,
+      "responseMin": 3,
+      "responseMax": 104,
+      "responseSd": 50.5,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1770647321164,
+      "completed": 1770647321366
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 22,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "5089f8be-f3f4-4157-92a0-e45233132456",
+          "httpRequestId": "9a406d47-41db-4c3f-8d23-d36ab2a1ea63"
+        },
+        "item": {
+          "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+          "name": "Register User",
+          "request": {
+            "description": {
+              "content": "Register a new user account",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            }
+          },
+          "response": [
+            {
+              "_": {
+                "postman_previewlanguage": "json"
+              },
+              "id": "e492d2e1-a6f0-443f-9235-a4f6a2a7d047",
+              "name": "Successful Registration",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [],
+              "body": "{\n  \"user\": {\n    \"user_id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"current_streak_days\": 0,\n    \"total_study_time_seconds\": 0\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+              "cookie": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "e5de7ccf-2d55-49ff-bfc4-b094dd12663e",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user and token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "pm.test(\"User has required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.user).to.have.property('user_id');",
+                  "    pm.expect(jsonData.user).to.have.property('username');",
+                  "    pm.expect(jsonData.user).to.have.property('email');",
+                  "});",
+                  "",
+                  "// Save token and user_id for subsequent requests",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                  "}"
+                ],
+                "_lastExecutionId": "abcf3dac-2530-48a5-894f-e297a7fd183a"
+              }
+            }
+          ]
+        },
+        "request": {
+          "description": {
+            "content": "Register a new user account",
+            "type": "text/plain"
+          },
+          "url": {
+            "protocol": "http",
+            "port": "4000",
+            "path": [
+              "api",
+              "auth",
+              "register"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "6746058b-0d65-4fa5-ae74-e6c4e079163f",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:4000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "117",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"username\": \"testuser_1770647321\",\n  \"email\": \"test_1770647321@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+          },
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "type": "string",
+                "value": "",
+                "key": "token"
+              }
+            ]
+          }
+        },
+        "response": {
+          "id": "c7a01ded-7380-47fe-a7eb-2b60ecf9887d",
+          "status": "Created",
+          "code": 201,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 09 Feb 2026 14:28:40 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Content-Length",
+              "value": "408"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              109,
+              101,
+              115,
+              115,
+              97,
+              103,
+              101,
+              34,
+              58,
+              34,
+              82,
+              101,
+              103,
+              105,
+              115,
+              116,
+              114,
+              97,
+              116,
+              105,
+              111,
+              110,
+              32,
+              115,
+              117,
+              99,
+              99,
+              101,
+              115,
+              115,
+              102,
+              117,
+              108,
+              34,
+              44,
+              34,
+              116,
+              111,
+              107,
+              101,
+              110,
+              34,
+              58,
+              34,
+              101,
+              121,
+              74,
+              104,
+              98,
+              71,
+              99,
+              105,
+              79,
+              105,
+              74,
+              73,
+              85,
+              122,
+              73,
+              49,
+              78,
+              105,
+              73,
+              115,
+              73,
+              110,
+              82,
+              53,
+              99,
+              67,
+              73,
+              54,
+              73,
+              107,
+              112,
+              88,
+              86,
+              67,
+              74,
+              57,
+              46,
+              101,
+              121,
+              74,
+              49,
+              99,
+              50,
+              86,
+              121,
+              88,
+              50,
+              108,
+              107,
+              73,
+              106,
+              111,
+              121,
+              76,
+              67,
+              74,
+              49,
+              99,
+              50,
+              86,
+              121,
+              98,
+              109,
+              70,
+              116,
+              90,
+              83,
+              73,
+              54,
+              73,
+              110,
+              82,
+              108,
+              99,
+              51,
+              82,
+              49,
+              99,
+              50,
+              86,
+              121,
+              88,
+              122,
+              69,
+              51,
+              78,
+              122,
+              65,
+              50,
+              78,
+              68,
+              99,
+              122,
+              77,
+              106,
+              69,
+              105,
+              76,
+              67,
+              74,
+              108,
+              98,
+              87,
+              70,
+              112,
+              98,
+              67,
+              73,
+              54,
+              73,
+              110,
+              82,
+              108,
+              99,
+              51,
+              82,
+              102,
+              77,
+              84,
+              99,
+              51,
+              77,
+              68,
+              89,
+              48,
+              78,
+              122,
+              77,
+              121,
+              77,
+              85,
+              66,
+              108,
+              101,
+              71,
+              70,
+              116,
+              99,
+              71,
+              120,
+              108,
+              76,
+              109,
+              78,
+              118,
+              98,
+              83,
+              73,
+              115,
+              73,
+              109,
+              108,
+              122,
+              99,
+              121,
+              73,
+              54,
+              73,
+              107,
+              70,
+              115,
+              90,
+              50,
+              57,
+              111,
+              98,
+              50,
+              120,
+              112,
+              89,
+              121,
+              66,
+              66,
+              85,
+              69,
+              107,
+              105,
+              76,
+              67,
+              74,
+              108,
+              101,
+              72,
+              65,
+              105,
+              79,
+              106,
+              69,
+              51,
+              78,
+              122,
+              65,
+              51,
+              77,
+              122,
+              77,
+              51,
+              77,
+              106,
+              69,
+              115,
+              73,
+              109,
+              108,
+              104,
+              100,
+              67,
+              73,
+              54,
+              77,
+              84,
+              99,
+              51,
+              77,
+              68,
+              89,
+              48,
+              78,
+              122,
+              77,
+              121,
+              77,
+              88,
+              48,
+              46,
+              109,
+              50,
+              113,
+              89,
+              95,
+              74,
+              119,
+              54,
+              70,
+              72,
+              76,
+              109,
+              77,
+              76,
+              51,
+              76,
+              49,
+              99,
+              65,
+              72,
+              52,
+              55,
+              122,
+              78,
+              112,
+              83,
+              68,
+              72,
+              73,
+              106,
+              89,
+              88,
+              49,
+              73,
+              81,
+              78,
+              56,
+              80,
+              56,
+              75,
+              100,
+              57,
+              107,
+              34,
+              44,
+              34,
+              117,
+              115,
+              101,
+              114,
+              34,
+              58,
+              123,
+              34,
+              101,
+              109,
+              97,
+              105,
+              108,
+              34,
+              58,
+              34,
+              116,
+              101,
+              115,
+              116,
+              95,
+              49,
+              55,
+              55,
+              48,
+              54,
+              52,
+              55,
+              51,
+              50,
+              49,
+              64,
+              101,
+              120,
+              97,
+              109,
+              112,
+              108,
+              101,
+              46,
+              99,
+              111,
+              109,
+              34,
+              44,
+              34,
+              117,
+              115,
+              101,
+              114,
+              95,
+              105,
+              100,
+              34,
+              58,
+              50,
+              44,
+              34,
+              117,
+              115,
+              101,
+              114,
+              110,
+              97,
+              109,
+              101,
+              34,
+              58,
+              34,
+              116,
+              101,
+              115,
+              116,
+              117,
+              115,
+              101,
+              114,
+              95,
+              49,
+              55,
+              55,
+              48,
+              54,
+              52,
+              55,
+              51,
+              50,
+              49,
+              34,
+              125,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 104,
+          "responseSize": 408
+        },
+        "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+        "assertions": [
+          {
+            "assertion": "Status code is 201",
+            "skipped": false
+          },
+          {
+            "assertion": "Response has user and token",
+            "skipped": false
+          },
+          {
+            "assertion": "User has required fields",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "44881a48-999b-4ddf-8478-079dbd9b00c2",
+          "length": 22,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "04bf651c-b1b5-48c7-849b-17f89f7c6c13"
+        },
+        "item": {
+          "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+          "name": "Login",
+          "request": {
+            "description": {
+              "content": "Login with username and password",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user and token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Save token for subsequent requests",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                  "}"
+                ],
+                "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+              }
+            }
+          ]
+        },
+        "request": {
+          "description": {
+            "content": "Login with username and password",
+            "type": "text/plain"
+          },
+          "url": {
+            "protocol": "http",
+            "port": "4000",
+            "path": [
+              "api",
+              "auth",
+              "login"
+            ],
+            "host": [
+              "localhost"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "d61baa29-86d5-49ca-8711-472756d6f037",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "localhost:4000",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "64",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+          },
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": {
+          "id": "d7ae8478-551f-496b-aef1-1f83457a628b",
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Mon, 09 Feb 2026 14:28:40 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "Content-Length",
+              "value": "40"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              34,
+              58,
+              34,
+              73,
+              110,
+              118,
+              97,
+              108,
+              105,
+              100,
+              32,
+              117,
+              115,
+              101,
+              114,
+              110,
+              97,
+              109,
+              101,
+              32,
+              111,
+              114,
+              32,
+              112,
+              97,
+              115,
+              115,
+              119,
+              111,
+              114,
+              100,
+              34,
+              125
+            ]
+          },
+          "cookie": [],
+          "responseTime": 3,
+          "responseSize": 40
+        },
+        "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+        "assertions": [
+          {
+            "assertion": "Status code is 200",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 200",
+              "message": "expected response to have status code 200 but got 401",
+              "stack": "AssertionError: expected response to have status code 200 but got 401\n   at Object.eval sandbox-script.js:1:2)"
+            }
+          },
+          {
+            "assertion": "Response has user and token",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 1,
+              "test": "Response has user and token",
+              "message": "expected { Object (error) } to have property 'user'",
+              "stack": "AssertionError: expected { Object (error) } to have property 'user'\n   at Object.eval sandbox-script.js:2:2)"
+            }
+          }
+        ],
+        "testScript": [
+          {
+            "error": {
+              "name": "AssertionFailure",
+              "message": "Status code is 200, Response has user and token",
+              "stack": "AssertionFailure: Status code is 200, Response has user and token\n    at postProcessContext (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:41:17)\n    at PostmanCollectionRun.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:513:39)\n    at PostmanSandbox.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-sandbox/lib/postman-sandbox.js:139:13)\n    at Object.onceWrapper (node:events:623:26)\n    at PostmanSandbox.emit (node:events:508:28)\n    at context.__uvm_emit (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/uvm/lib/bridge.js:71:21)\n    at Object.dispatch (evalmachine.<anonymous>:20:13)\n    at Object.<anonymous> (evalmachine.<anonymous>:66:7860)\n    at t.exports.terminate (evalmachine.<anonymous>:66:22105)\n    at Immediate._onImmediate (evalmachine.<anonymous>:66:5993)\n    at process.processImmediate (node:internal/timers:506:21)",
+              "checksum": "d61961e95e3c737ab0fab19a4c6112ea",
+              "id": "b1fc01cc-dff5-4a3d-9826-d8f43e5ba538",
+              "timestamp": 1770647321362,
+              "stacktrace": [
+                {
+                  "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js",
+                  "lineNumber": 41,
+                  "functionName": "postProcessContext",
+                  "typeName": "Object",
+                  "methodName": null,
+                  "columnNumber": 17,
+                  "native": false
+                },
+                {
+                  "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js",
+                  "lineNumber": 513,
+                  "functionName": "",
+                  "typeName": "PostmanCollectionRun",
+                  "methodName": null,
+                  "columnNumber": 39,
+                  "native": false
+                },
+                {
+                  "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-sandbox/lib/postman-sandbox.js",
+                  "lineNumber": 139,
+                  "functionName": "",
+                  "typeName": "PostmanSandbox",
+                  "methodName": null,
+                  "columnNumber": 13,
+                  "native": false
+                },
+                {
+                  "fileName": "node:events",
+                  "lineNumber": 623,
+                  "functionName": "Object.onceWrapper",
+                  "typeName": "Object",
+                  "methodName": "onceWrapper",
+                  "columnNumber": 26,
+                  "native": false
+                },
+                {
+                  "fileName": "node:events",
+                  "lineNumber": 508,
+                  "functionName": "PostmanSandbox.emit",
+                  "typeName": "PostmanSandbox",
+                  "methodName": "emit",
+                  "columnNumber": 28,
+                  "native": false
+                },
+                {
+                  "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/uvm/lib/bridge.js",
+                  "lineNumber": 71,
+                  "functionName": "context.__uvm_emit",
+                  "typeName": "context",
+                  "methodName": "__uvm_emit",
+                  "columnNumber": 21,
+                  "native": false
+                },
+                {
+                  "fileName": "evalmachine.<anonymous>",
+                  "lineNumber": 20,
+                  "functionName": "Object.dispatch",
+                  "typeName": "Object",
+                  "methodName": "dispatch",
+                  "columnNumber": 13,
+                  "native": false
+                },
+                {
+                  "fileName": "evalmachine.<anonymous>",
+                  "lineNumber": 66,
+                  "functionName": "",
+                  "typeName": "Object",
+                  "methodName": null,
+                  "columnNumber": 7860,
+                  "native": false
+                },
+                {
+                  "fileName": "evalmachine.<anonymous>",
+                  "lineNumber": 66,
+                  "functionName": "t.exports.terminate",
+                  "typeName": "t",
+                  "methodName": "exports.terminate",
+                  "columnNumber": 22105,
+                  "native": false
+                },
+                {
+                  "fileName": "evalmachine.<anonymous>",
+                  "lineNumber": 66,
+                  "functionName": "Immediate._onImmediate",
+                  "typeName": "Immediate",
+                  "methodName": "_onImmediate",
+                  "columnNumber": 5993,
+                  "native": false
+                },
+                {
+                  "fileName": "node:internal/timers",
+                  "lineNumber": 506,
+                  "functionName": "process.processImmediate",
+                  "typeName": "process",
+                  "methodName": "processImmediate",
+                  "columnNumber": 21,
+                  "native": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "transfers": {
+      "responseTotal": 448
+    },
+    "failures": [
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Status code is 200",
+          "message": "expected response to have status code 200 but got 401",
+          "stack": "AssertionError: expected response to have status code 200 but got 401\n   at Object.eval sandbox-script.js:1:2)",
+          "checksum": "4cbbfd50d1523026b7122af68edf6046",
+          "id": "aa7ae7e3-391e-4079-aecb-05c2e007ae08",
+          "timestamp": 1770647321357,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 2,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+          "name": "Login",
+          "request": {
+            "description": {
+              "content": "Login with username and password",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user and token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Save token for subsequent requests",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                  "}"
+                ],
+                "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "id": "668466d6-a11e-4e78-bb50-21686f84c56b",
+          "name": "Authentication",
+          "item": [
+            {
+              "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+              "name": "Register User",
+              "request": {
+                "description": {
+                  "content": "Register a new user account",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "_": {
+                    "postman_previewlanguage": "json"
+                  },
+                  "id": "e492d2e1-a6f0-443f-9235-a4f6a2a7d047",
+                  "name": "Successful Registration",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "header": [],
+                  "body": "{\n  \"user\": {\n    \"user_id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"current_streak_days\": 0,\n    \"total_study_time_seconds\": 0\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+                  "cookie": []
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e5de7ccf-2d55-49ff-bfc4-b094dd12663e",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "pm.test(\"User has required fields\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user).to.have.property('user_id');",
+                      "    pm.expect(jsonData.user).to.have.property('username');",
+                      "    pm.expect(jsonData.user).to.have.property('email');",
+                      "});",
+                      "",
+                      "// Save token and user_id for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "abcf3dac-2530-48a5-894f-e297a7fd183a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+              "name": "Login",
+              "request": {
+                "description": {
+                  "content": "Login with username and password",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+                },
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "// Save token for subsequent requests",
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "663302fe-2829-43c9-a291-ed71e4f79b76",
+              "name": "Get Current User",
+              "request": {
+                "description": {
+                  "content": "Get currently authenticated user",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "me"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8cc8c9a1-4d66-4f19-9d6e-09faaebb9938",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"User object is returned\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user_id');",
+                      "    pm.expect(jsonData).to.have.property('username');",
+                      "    pm.expect(jsonData).to.have.property('email');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "event": []
+        },
+        "cursor": {
+          "ref": "44881a48-999b-4ddf-8478-079dbd9b00c2",
+          "length": 22,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "04bf651c-b1b5-48c7-849b-17f89f7c6c13",
+          "scriptId": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+          "execution": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 1,
+          "test": "Response has user and token",
+          "message": "expected { Object (error) } to have property 'user'",
+          "stack": "AssertionError: expected { Object (error) } to have property 'user'\n   at Object.eval sandbox-script.js:2:2)",
+          "checksum": "aefc3711a9cc302ace18d2426ae7d411",
+          "id": "662dfa15-8384-4625-a559-1c9ea03462cf",
+          "timestamp": 1770647321360,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 2,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 2,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:1 in test-script",
+        "source": {
+          "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+          "name": "Login",
+          "request": {
+            "description": {
+              "content": "Login with username and password",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user and token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Save token for subsequent requests",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                  "}"
+                ],
+                "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "id": "668466d6-a11e-4e78-bb50-21686f84c56b",
+          "name": "Authentication",
+          "item": [
+            {
+              "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+              "name": "Register User",
+              "request": {
+                "description": {
+                  "content": "Register a new user account",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "_": {
+                    "postman_previewlanguage": "json"
+                  },
+                  "id": "e492d2e1-a6f0-443f-9235-a4f6a2a7d047",
+                  "name": "Successful Registration",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "header": [],
+                  "body": "{\n  \"user\": {\n    \"user_id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"current_streak_days\": 0,\n    \"total_study_time_seconds\": 0\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+                  "cookie": []
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e5de7ccf-2d55-49ff-bfc4-b094dd12663e",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "pm.test(\"User has required fields\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user).to.have.property('user_id');",
+                      "    pm.expect(jsonData.user).to.have.property('username');",
+                      "    pm.expect(jsonData.user).to.have.property('email');",
+                      "});",
+                      "",
+                      "// Save token and user_id for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "abcf3dac-2530-48a5-894f-e297a7fd183a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+              "name": "Login",
+              "request": {
+                "description": {
+                  "content": "Login with username and password",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+                },
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "// Save token for subsequent requests",
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "663302fe-2829-43c9-a291-ed71e4f79b76",
+              "name": "Get Current User",
+              "request": {
+                "description": {
+                  "content": "Get currently authenticated user",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "me"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8cc8c9a1-4d66-4f19-9d6e-09faaebb9938",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"User object is returned\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user_id');",
+                      "    pm.expect(jsonData).to.have.property('username');",
+                      "    pm.expect(jsonData).to.have.property('email');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "event": []
+        },
+        "cursor": {
+          "ref": "44881a48-999b-4ddf-8478-079dbd9b00c2",
+          "length": 22,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "04bf651c-b1b5-48c7-849b-17f89f7c6c13",
+          "scriptId": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+          "execution": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionFailure",
+          "message": "Status code is 200, Response has user and token",
+          "stack": "AssertionFailure: Status code is 200, Response has user and token\n    at postProcessContext (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:41:17)\n    at PostmanCollectionRun.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:513:39)\n    at PostmanSandbox.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-sandbox/lib/postman-sandbox.js:139:13)\n    at Object.onceWrapper (node:events:623:26)\n    at PostmanSandbox.emit (node:events:508:28)\n    at context.__uvm_emit (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/uvm/lib/bridge.js:71:21)\n    at Object.dispatch (evalmachine.<anonymous>:20:13)\n    at Object.<anonymous> (evalmachine.<anonymous>:66:7860)\n    at t.exports.terminate (evalmachine.<anonymous>:66:22105)\n    at Immediate._onImmediate (evalmachine.<anonymous>:66:5993)\n    at process.processImmediate (node:internal/timers:506:21)",
+          "checksum": "d61961e95e3c737ab0fab19a4c6112ea",
+          "id": "b1fc01cc-dff5-4a3d-9826-d8f43e5ba538",
+          "timestamp": 1770647321362,
+          "stacktrace": [
+            {
+              "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js",
+              "lineNumber": 41,
+              "functionName": "postProcessContext",
+              "typeName": "Object",
+              "methodName": null,
+              "columnNumber": 17,
+              "native": false
+            },
+            {
+              "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js",
+              "lineNumber": 513,
+              "functionName": "",
+              "typeName": "PostmanCollectionRun",
+              "methodName": null,
+              "columnNumber": 39,
+              "native": false
+            },
+            {
+              "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-sandbox/lib/postman-sandbox.js",
+              "lineNumber": 139,
+              "functionName": "",
+              "typeName": "PostmanSandbox",
+              "methodName": null,
+              "columnNumber": 13,
+              "native": false
+            },
+            {
+              "fileName": "node:events",
+              "lineNumber": 623,
+              "functionName": "Object.onceWrapper",
+              "typeName": "Object",
+              "methodName": "onceWrapper",
+              "columnNumber": 26,
+              "native": false
+            },
+            {
+              "fileName": "node:events",
+              "lineNumber": 508,
+              "functionName": "PostmanSandbox.emit",
+              "typeName": "PostmanSandbox",
+              "methodName": "emit",
+              "columnNumber": 28,
+              "native": false
+            },
+            {
+              "fileName": "/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/uvm/lib/bridge.js",
+              "lineNumber": 71,
+              "functionName": "context.__uvm_emit",
+              "typeName": "context",
+              "methodName": "__uvm_emit",
+              "columnNumber": 21,
+              "native": false
+            },
+            {
+              "fileName": "evalmachine.<anonymous>",
+              "lineNumber": 20,
+              "functionName": "Object.dispatch",
+              "typeName": "Object",
+              "methodName": "dispatch",
+              "columnNumber": 13,
+              "native": false
+            },
+            {
+              "fileName": "evalmachine.<anonymous>",
+              "lineNumber": 66,
+              "functionName": "",
+              "typeName": "Object",
+              "methodName": null,
+              "columnNumber": 7860,
+              "native": false
+            },
+            {
+              "fileName": "evalmachine.<anonymous>",
+              "lineNumber": 66,
+              "functionName": "t.exports.terminate",
+              "typeName": "t",
+              "methodName": "exports.terminate",
+              "columnNumber": 22105,
+              "native": false
+            },
+            {
+              "fileName": "evalmachine.<anonymous>",
+              "lineNumber": 66,
+              "functionName": "Immediate._onImmediate",
+              "typeName": "Immediate",
+              "methodName": "_onImmediate",
+              "columnNumber": 5993,
+              "native": false
+            },
+            {
+              "fileName": "node:internal/timers",
+              "lineNumber": 506,
+              "functionName": "process.processImmediate",
+              "typeName": "process",
+              "methodName": "processImmediate",
+              "columnNumber": 21,
+              "native": false
+            }
+          ]
+        },
+        "at": "test-script:39:17",
+        "source": {
+          "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+          "name": "Login",
+          "request": {
+            "description": {
+              "content": "Login with username and password",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has user and token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "});",
+                  "",
+                  "// Save token for subsequent requests",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                  "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                  "}"
+                ],
+                "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "id": "668466d6-a11e-4e78-bb50-21686f84c56b",
+          "name": "Authentication",
+          "item": [
+            {
+              "id": "6f4e097e-7e3a-41bd-9fa6-71d8701f8b59",
+              "name": "Register User",
+              "request": {
+                "description": {
+                  "content": "Register a new user account",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+                }
+              },
+              "response": [
+                {
+                  "_": {
+                    "postman_previewlanguage": "json"
+                  },
+                  "id": "e492d2e1-a6f0-443f-9235-a4f6a2a7d047",
+                  "name": "Successful Registration",
+                  "originalRequest": {
+                    "url": {
+                      "path": [
+                        "api",
+                        "auth",
+                        "register"
+                      ],
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "query": [],
+                      "variable": []
+                    },
+                    "method": "POST",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "header": [],
+                  "body": "{\n  \"user\": {\n    \"user_id\": 1,\n    \"username\": \"johndoe\",\n    \"email\": \"john@example.com\",\n    \"current_streak_days\": 0,\n    \"total_study_time_seconds\": 0\n  },\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}",
+                  "cookie": []
+                }
+              ],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e5de7ccf-2d55-49ff-bfc4-b094dd12663e",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "pm.test(\"User has required fields\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.user).to.have.property('user_id');",
+                      "    pm.expect(jsonData.user).to.have.property('username');",
+                      "    pm.expect(jsonData.user).to.have.property('email');",
+                      "});",
+                      "",
+                      "// Save token and user_id for subsequent requests",
+                      "if (pm.response.code === 201) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "abcf3dac-2530-48a5-894f-e297a7fd183a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "431af059-adc7-4854-85c0-40337b84b2c3",
+              "name": "Login",
+              "request": {
+                "description": {
+                  "content": "Login with username and password",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePassword123!\"\n}"
+                },
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "f0ccd47a-79df-4ad0-9161-812d11fd5c80",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response has user and token\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user');",
+                      "    pm.expect(jsonData).to.have.property('token');",
+                      "});",
+                      "",
+                      "// Save token for subsequent requests",
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set(\"auth_token\", jsonData.token);",
+                      "    pm.collectionVariables.set(\"user_id\", jsonData.user.user_id);",
+                      "}"
+                    ],
+                    "_lastExecutionId": "cfed0ae7-002f-49e1-8a7c-8f3066421e2d"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "663302fe-2829-43c9-a291-ed71e4f79b76",
+              "name": "Get Current User",
+              "request": {
+                "description": {
+                  "content": "Get currently authenticated user",
+                  "type": "text/plain"
+                },
+                "url": {
+                  "path": [
+                    "api",
+                    "auth",
+                    "me"
+                  ],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8cc8c9a1-4d66-4f19-9d6e-09faaebb9938",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"User object is returned\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('user_id');",
+                      "    pm.expect(jsonData).to.have.property('username');",
+                      "    pm.expect(jsonData).to.have.property('email');",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "event": []
+        },
+        "cursor": {
+          "ref": "44881a48-999b-4ddf-8478-079dbd9b00c2",
+          "length": 22,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "04bf651c-b1b5-48c7-849b-17f89f7c6c13",
+          "scriptId": "f0ccd47a-79df-4ad0-9161-812d11fd5c80"
+        }
+      }
+    ],
+    "error": null
+  }
+}

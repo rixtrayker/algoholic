@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { questionsAPI } from '../lib/api';
 import { Clock, CheckCircle, XCircle, Lightbulb, ArrowRight } from 'lucide-react';
 
@@ -25,6 +26,16 @@ export default function Practice() {
       setResult(data);
       // Invalidate stats to refresh dashboard
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+
+      // Show success notification
+      if (data.is_correct) {
+        toast.success('Correct! Well done!');
+      } else {
+        toast.error('Incorrect. Keep trying!');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.error || 'Failed to submit answer. Please try again.');
     },
   });
 

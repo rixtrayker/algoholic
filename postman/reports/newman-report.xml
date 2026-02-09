@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Algoholic API" tests="2" time="0.107">
+  <testsuite name="Authentication / Register User" id="6f4e097e-7e3a-41bd-9fa6-71d8701f8b59" timestamp="2026-02-09T14:28:41.164Z" tests="3" failures="0" errors="0" time="0.104">
+    <testcase name="Status code is 201" time="0.104" classname="AuthenticationRegisterUser"/>
+    <testcase name="Response has user and token" time="0.104" classname="AuthenticationRegisterUser"/>
+    <testcase name="User has required fields" time="0.104" classname="AuthenticationRegisterUser"/>
+  </testsuite>
+  <testsuite name="Authentication / Login" id="431af059-adc7-4854-85c0-40337b84b2c3" timestamp="2026-02-09T14:28:41.164Z" tests="2" failures="2" errors="1" time="0.003">
+    <system-err><![CDATA[Iteration: 0
+
+---
+testScriptError: AssertionFailure: Status code is 200, Response has user and token
+    at postProcessContext (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:41:17)
+    at PostmanCollectionRun.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-runtime/lib/runner/extensions/event.command.js:513:39)
+    at PostmanSandbox.<anonymous> (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/postman-sandbox/lib/postman-sandbox.js:139:13)
+    at Object.onceWrapper (node:events:623:26)
+    at PostmanSandbox.emit (node:events:508:28)
+    at context.__uvm_emit (/usr/local/Cellar/newman/6.2.1/libexec/lib/node_modules/newman/node_modules/uvm/lib/bridge.js:71:21)
+    at Object.dispatch (evalmachine.<anonymous>:20:13)
+    at Object.<anonymous> (evalmachine.<anonymous>:66:7860)
+    at t.exports.terminate (evalmachine.<anonymous>:66:22105)
+    at Immediate._onImmediate (evalmachine.<anonymous>:66:5993)
+    at process.processImmediate (node:internal/timers:506:21)
+---
+]]></system-err>
+    <testcase name="Status code is 200" time="0.003" classname="AuthenticationLogin">
+      <failure type="AssertionFailure" message="expected response to have status code 200 but got 401">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: b1e51fcc-4f20-468c-a199-d3f57e1510b5.]]>
+        <![CDATA[Collection name: Algoholic API.]]>
+        <![CDATA[Request name: Authentication / Login.]]>
+        <![CDATA[Test description: Status code is 200.]]>
+        <![CDATA[Error message: expected response to have status code 200 but got 401.]]>
+        <![CDATA[Stacktrace: AssertionError: expected response to have status code 200 but got 401
+   at Object.eval sandbox-script.js:1:2).]]>
+      </failure>
+    </testcase>
+    <testcase name="Response has user and token" time="0.003" classname="AuthenticationLogin">
+      <failure type="AssertionFailure" message="expected { Object (error) } to have property 'user'">
+        <![CDATA[Failed 1 times.]]>
+        <![CDATA[Collection JSON ID: b1e51fcc-4f20-468c-a199-d3f57e1510b5.]]>
+        <![CDATA[Collection name: Algoholic API.]]>
+        <![CDATA[Request name: Authentication / Login.]]>
+        <![CDATA[Test description: Response has user and token.]]>
+        <![CDATA[Error message: expected { Object (error) } to have property 'user'.]]>
+        <![CDATA[Stacktrace: AssertionError: expected { Object (error) } to have property 'user'
+   at Object.eval sandbox-script.js:2:2).]]>
+      </failure>
+    </testcase>
+  </testsuite>
+</testsuites>

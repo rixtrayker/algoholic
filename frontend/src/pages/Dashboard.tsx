@@ -3,13 +3,28 @@ import { userAPI } from '../lib/api';
 import { BarChart, TrendingUp, Flame, Target } from 'lucide-react';
 
 export default function Dashboard() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ['user-stats'],
     queryFn: userAPI.getStats,
+    retry: 2,
   });
 
   if (isLoading) {
     return <div className="text-center py-12">Loading your stats...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="card text-center py-12">
+        <p className="text-red-600 mb-4">Failed to load your stats.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   return (

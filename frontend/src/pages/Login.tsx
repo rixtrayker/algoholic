@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 
 interface LoginProps {
@@ -18,12 +19,21 @@ export default function Login({ isRegister = false }: LoginProps) {
     try {
       if (isRegister) {
         await register(username, email, password);
+        toast.success('Account created successfully! Welcome to Algoholic.');
       } else {
         await login(username, password);
+        toast.success('Welcome back!');
       }
-      navigate('/');
-    } catch (err) {
-      // Error handled by store
+      navigate('/dashboard');
+    } catch (err: any) {
+      // Parse error message from backend
+      const errorMessage =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        (isRegister ? 'Registration failed. Please try again.' : 'Login failed. Please check your credentials.');
+
+      toast.error(errorMessage);
     }
   };
 

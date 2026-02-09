@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -18,14 +19,41 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors and network errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      window.location.href = '/login';
+    // Network error (no response)
+    if (!error.response) {
+      toast.error('Network error. Please check your connection.');
+      return Promise.reject(error);
     }
+
+    const status = error.response.status;
+    const errorMessage = error.response.data?.error || error.response.data?.message;
+
+    // Handle specific error codes
+    if (status === 401) {
+      const currentPath = window.location.pathname;
+      // Only redirect if not already on login page
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        localStorage.removeItem('auth_token');
+        toast.error('Session expired. Please login again.');
+        window.location.href = '/login';
+      }
+    } else if (status === 403) {
+      toast.error(errorMessage || 'Access denied.');
+    } else if (status === 404) {
+      toast.error(errorMessage || 'Resource not found.');
+    } else if (status === 500) {
+      toast.error('Server error. Please try again later.');
+    } else if (status >= 400 && status < 500) {
+      // Client errors - show specific message
+      if (errorMessage) {
+        toast.error(errorMessage);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
@@ -86,6 +114,9 @@ export interface TrainingPlan {
 export const authAPI = {
   register: async (username: string, email: string, password: string) => {
     const { data } = await api.post('/auth/register', { username, email, password });
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token);
+    }
     return data;
   },
 
@@ -189,17 +220,17 @@ export const questionsAPI = {
 // User API
 export const userAPI = {
   getStats: async () => {
-    const { data } = await api.get('/users/stats');
+    const { data } = await api.get('/users/me/stats');
     return data as UserStats;
   },
 
   getProgress: async (days = 30) => {
-    const { data } = await api.get('/users/progress', { params: { days } });
+    const { data } = await api.get('/users/me/progress', { params: { days } });
     return data;
   },
 
   getAttempts: async (limit = 50) => {
-    const { data } = await api.get('/users/attempts', { params: { limit } });
+    const { data } = await api.get('/users/me/attempts', { params: { limit } });
     return data;
   },
 
