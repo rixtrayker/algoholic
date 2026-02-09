@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"github.com/yourusername/algoholic/backend/config"
-	"github.com/yourusername/algoholic/backend/models"
-	"github.com/yourusername/algoholic/backend/routes"
+	"github.com/yourusername/algoholic/config"
+	"github.com/yourusername/algoholic/models"
+	"github.com/yourusername/algoholic/routes"
 )
 
 var (

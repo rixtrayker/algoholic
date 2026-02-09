@@ -8,8 +8,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/algoholic/backend/config"
-	"github.com/yourusername/algoholic/backend/models"
+	"github.com/yourusername/algoholic/config"
+	"github.com/yourusername/algoholic/models"
 )
 
 var (

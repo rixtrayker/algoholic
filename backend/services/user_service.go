@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"github.com/yourusername/algoholic/backend/models"
+	"github.com/yourusername/algoholic/models"
 )
 
 // UserService handles user-related operations

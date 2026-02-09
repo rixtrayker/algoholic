@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
-	"github.com/yourusername/algoholic/backend/models"
+	"github.com/yourusername/algoholic/models"
 )
 
 // ProblemService handles problem-related operations

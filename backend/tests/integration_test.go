@@ -12,9 +12,9 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/algoholic/backend/config"
-	"github.com/yourusername/algoholic/backend/models"
-	"github.com/yourusername/algoholic/backend/routes"
+	"github.com/yourusername/algoholic/config"
+	"github.com/yourusername/algoholic/models"
+	"github.com/yourusername/algoholic/routes"
 )
 
 var (

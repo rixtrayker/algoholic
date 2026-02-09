@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"github.com/yourusername/algoholic/backend/models"
+	"github.com/yourusername/algoholic/models"
 )
 
 // TrainingPlanService handles training plan operations

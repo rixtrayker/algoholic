@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/yourusername/algoholic/backend/middleware"
-	"github.com/yourusername/algoholic/backend/services"
+	"github.com/yourusername/algoholic/middleware"
+	"github.com/yourusername/algoholic/services"
 )
 
 type AuthHandler struct {

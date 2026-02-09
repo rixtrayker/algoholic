@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/yourusername/algoholic/backend/services"
+	"github.com/yourusername/algoholic/services"
 )
 
 type ProblemHandler struct {

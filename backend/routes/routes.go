@@ -4,10 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/algoholic/backend/config"
-	"github.com/yourusername/algoholic/backend/handlers"
-	"github.com/yourusername/algoholic/backend/middleware"
-	"github.com/yourusername/algoholic/backend/services"
+	"github.com/yourusername/algoholic/config"
+	"github.com/yourusername/algoholic/handlers"
+	"github.com/yourusername/algoholic/middleware"
+	"github.com/yourusername/algoholic/services"
 )
 
 // SetupRoutes configures all application routes
@@ -67,8 +67,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	questions.Get("/", questionHandler.GetQuestions)
 	questions.Get("/random", questionHandler.GetRandomQuestion)
 	questions.Get("/:id", questionHandler.GetQuestion)
-	questions.Post("/:id/answer", protected, questionHandler.SubmitAnswer)
-	questions.Get("/:id/attempts", protected, questionHandler.GetUserAttempts)
+	protected.Post("/questions/:id/answer", questionHandler.SubmitAnswer)
+	protected.Get("/questions/:id/attempts", questionHandler.GetUserAttempts)
 
 	// Problem questions
 	api.Get("/problems/:problemId/questions", questionHandler.GetQuestionsByProblem)
