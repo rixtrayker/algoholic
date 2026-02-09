@@ -27,15 +27,15 @@ const queryClient = new QueryClient({
 
 // Protected Route wrapper
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, fetchUser } = useAuthStore();
+  const { isAuthenticated, isLoading, user, fetchUser } = useAuthStore();
 
   useEffect(() => {
-    // Only fetch user once when component mounts
-    if (!isAuthenticated) {
+    // Only fetch user if we have a token but no user data
+    if (isAuthenticated && !user) {
       fetchUser();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps array - only run once
+  }, []); // Empty deps array - only run once on mount
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;

@@ -35,19 +35,13 @@ api.interceptors.response.use(
 
     // Handle specific error codes
     if (status === 401) {
-      const currentPath = window.location.pathname;
-      // Don't show toast or redirect for auth/me requests (silent fail for token validation)
-      if (requestUrl.includes('/auth/me')) {
+      // Don't show toast or redirect for auth endpoints (handled by components)
+      if (requestUrl.includes('/auth/')) {
         return Promise.reject(error);
       }
-      // Only redirect if not already on login page
-      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
-        localStorage.removeItem('auth_token');
-        toast.error('Session expired. Please login again.');
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 1000);
-      }
+      // For other 401s (expired sessions during normal use), just clear token
+      // The PrivateRoute will handle the redirect
+      localStorage.removeItem('auth_token');
     } else if (status === 403) {
       toast.error(errorMessage || 'Access denied.');
     } else if (status === 404) {
