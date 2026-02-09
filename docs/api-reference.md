@@ -1,5 +1,12 @@
 ## API Reference
 
+**📦 Postman Collection**: For the complete, up-to-date API specification with tests and examples, see:
+- Collection: [`postman/algoholic-api.postman_collection.json`](../postman/algoholic-api.postman_collection.json)
+- Documentation: [`postman/README.md`](../postman/README.md)
+- Alignment Report: [`api-frontend-alignment.md`](./api-frontend-alignment.md)
+
+**✅ Current Status**: 22 endpoints across 7 categories, all tested with Newman
+
 Base URL: `http://localhost:4000/api`
 
 ### Authentication
@@ -8,6 +15,8 @@ All protected endpoints require a JWT token in the Authorization header:
 ```
 Authorization: Bearer <token>
 ```
+
+**Testing**: Run `cd postman && ./run-tests.sh` to execute all API tests via Newman
 
 ---
 

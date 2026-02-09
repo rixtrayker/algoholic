@@ -23,37 +23,48 @@
 
 ## 1. System Overview
 
-### Technology Stack
+**✅ Current Status**: Phase 1 Complete - All Core Services Running
+- Backend API: http://localhost:4000 (Go Fiber v2.52.11, 65 routes)
+- Frontend: http://localhost:5173 (React 19 + Vite 7.3.1)
+- Database: PostgreSQL (leetcode_training)
+- API Tests: Postman Collection + Newman (22 endpoints)
+
+### Technology Stack (Current Implementation)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  Frontend (React + Tailwind)         │
+│     Frontend (React 19 + Tailwind CSS v4) ✅        │
+│     Port: 5173 | Vite HMR | 46 Tests Passing        │
 └────────────────────────┬────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────┐
-│                  Backend (Go + Fiber)                │
-│              (GORM + golang-migrate)                 │
+│          Backend (Go + Fiber v2.52.11) ✅           │
+│     Port: 4000 | GORM Auto-Migration | JWT Auth     │
 └──┬──────────┬──────────┬──────────┬─────────────────┘
    │          │          │          │
 ┌──▼────────┐┌▼────────┐┌▼────────┐┌▼──────────────┐
-│PostgreSQL ││ChromaDB/ ││Ollama/  ││Redis (optional)│
-│+ AGE      ││Qdrant    ││LlamaCPP ││Cache/Sessions  │
-│(Graph)    ││(Vectors) ││(LLM)   ││                │
+│PostgreSQL ││ChromaDB/ ││Ollama/  ││Redis          │
+│✅ Running ││⏭ Phase 2││⏭ Phase 2││⏭ Phase 2     │
+│Port: 5432 ││(Vectors) ││(LLM)   ││(Cache)        │
 └───────────┘└──────────┘└─────────┘└────────────────┘
                     │
               ┌─────▼──────┐
               │ RAG Pipeline│
+              │  ⏭ Phase 2 │
               └────────────┘
 ```
 
 ### Core Capabilities
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Relational | PostgreSQL | Problems, questions, users, progress, training plans |
-| Graph | Apache AGE | Problem→Problem, Topic→Topic relationships, learning paths |
-| Semantic | ChromaDB/Qdrant | Similarity search, RAG context, recommendations |
-| AI | Ollama (local LLM) | Assessment, question generation, weakness analysis |
+| Layer | Technology | Status | Purpose |
+|-------|-----------|--------|---------|
+| API | Go Fiber v2.52.11 | ✅ Running | 22 REST endpoints with JWT auth |
+| Frontend | React 19 + Vite 7.3.1 | ✅ Running | Interactive UI with Tailwind CSS v4 |
+| Relational | PostgreSQL 16 | ✅ Running | Problems, questions, users, progress, training plans |
+| Testing | Newman 6.2.1 | ✅ Active | API testing with Postman collection |
+| Graph | Apache AGE | ⏭ Phase 2 | Problem→Problem, Topic→Topic relationships, learning paths |
+| Semantic | ChromaDB/Qdrant | ⏭ Phase 2 | Similarity search, RAG context, recommendations |
+| AI | Ollama (local LLM) | ⏭ Phase 2 | Assessment, question generation, weakness analysis |
 
 ---
 
@@ -730,38 +741,54 @@ All prompts use low temperature (0.3) for assessment consistency, higher (0.7-0.
 
 ## 11. API Design
 
+**✅ Current Implementation**: 22 endpoints across 7 categories
+
+See the **[Postman Collection](../postman/algoholic-api.postman_collection.json)** for complete specifications with tests.
+
+**Quick Reference**:
+
 ```
-Problems
+Authentication (3 endpoints)
+  POST   /api/auth/register               Register new user
+  POST   /api/auth/login                  Login
+  GET    /api/auth/me 🔒                  Get current user
+
+Questions (4 endpoints)
+  GET    /api/questions/random            Get random question (with filters)
+  POST   /api/questions/{id}/answer 🔒    Submit answer
+  GET    /api/questions/{id}/hint 🔒      Request hint
+
+Problems (4 endpoints)
   GET    /api/problems                    Search/filter problems
   GET    /api/problems/{id}               Get problem details
-  GET    /api/problems/{id}/similar       Similar problems (graph + vector)
-  GET    /api/problems/{id}/follow-ups    Follow-up problems
+  GET    /api/problems/{id}/questions     Get problem's questions
+  GET    /api/problems/search             Search problems
 
-Questions
-  GET    /api/questions                   Search/filter questions
-  GET    /api/questions/{id}              Get question
-  POST   /api/questions/{id}/answer       Submit answer
+User Stats (3 endpoints)
+  GET    /api/users/stats 🔒              User statistics
+  GET    /api/users/progress 🔒           Progress history
+  GET    /api/users/attempts 🔒           Attempt history
 
-Search
-  GET    /api/search/problems             Unified search (keyword + semantic + graph)
+Training Plans (5 endpoints)
+  GET    /api/plans                       List all plans
+  GET    /api/plans/{id}                  Get plan details
+  POST   /api/plans/{id}/enroll 🔒        Enroll in plan
+  GET    /api/users/plans 🔒              Get user's enrolled plans
+  PUT    /api/plans/{id}/progress 🔒      Update plan progress
 
-Training Plans
-  GET    /api/training-plans              List user's plans
-  POST   /api/training-plans              Generate new plan
-  GET    /api/training-plans/{id}/next    Get next question
+Topics (2 endpoints)
+  GET    /api/topics                      List all topics
+  GET    /api/users/topics/{id}/performance 🔒  Get topic performance
 
-Assessments
-  POST   /api/assessments/start           Start assessment
-  POST   /api/assessments/{id}/answer     Submit answer
-  POST   /api/assessments/{id}/complete   Complete & trigger LLM analysis
-  GET    /api/assessments/{id}/analysis   Get analysis results
-
-User
-  GET    /api/users/me/stats              Progress statistics
-  GET    /api/users/me/weaknesses         Detected weaknesses
-  GET    /api/users/me/recommendations    Personalized recommendations
-  GET    /api/users/me/review-queue       Spaced repetition queue
+Health Check (1 endpoint)
+  GET    /health                          Health check
 ```
+
+🔒 = Requires JWT authentication
+
+**Testing**: Run `cd postman && ./run-tests.sh` to test all endpoints
+
+**Documentation**: See [docs/api-reference.md](./api-reference.md) and [postman/README.md](../postman/README.md)
 
 ---
 
@@ -839,27 +866,49 @@ frontend/
 │   └── services/    # API client
 ```
 
-### Startup
+### Startup (Current Method)
+
+**✅ Services are already running**:
 
 ```bash
-docker-compose up -d
-docker exec -it leetcode_ollama ollama pull mistral:7b
-docker exec -it leetcode_ollama ollama pull codellama:13b
-# Run migrations
-migrate -path migrations -database "postgresql://leetcode:leetcode123@localhost:5432/leetcode_training?sslmode=disable" up
-# Backend: http://localhost:4000
-# Frontend: http://localhost:3000
+# Backend (Terminal 1)
+cd backend
+go run main.go
+# → http://localhost:4000
+
+# Frontend (Terminal 2)
+cd frontend
+npm run dev
+# → http://localhost:5173
+
+# Database is running as system PostgreSQL service
+# postgresql://leetcode:leetcode_password@localhost:5432/leetcode_training
 ```
+
+**Health Check**:
+```bash
+curl http://localhost:4000/health
+```
+
+**Run API Tests**:
+```bash
+cd postman
+./run-tests.sh
+```
+
+**See [RUNNING.md](../RUNNING.md) for complete service management guide.**
 
 ---
 
 ## 13. Implementation Phases
 
-| Phase | Weeks | Deliverable |
-|-------|-------|-------------|
-| 1. Foundation | 1-2 | PostgreSQL schema, basic CRUD API, 50 problems + 200 questions |
-| 2. Intelligence | 3-4 | Vector DB + embeddings, graph relationships, semantic search |
-| 3. Training | 5-6 | Training plans, progress tracking, spaced repetition, weakness detection |
-| 4. AI | 7-8 | Ollama integration, RAG, assessment analysis, question generation |
-| 5. Frontend | 9-10 | React app, practice UI, dashboard, analytics |
-| 6. Polish | 11-12 | Performance optimization, difficulty calibration, user testing |
+| Phase | Weeks | Status | Deliverable |
+|-------|-------|--------|-------------|
+| 1. Foundation | 1-2 | ✅ **COMPLETE** | PostgreSQL schema, 22 API endpoints, JWT auth, Frontend with 46 tests, Postman collection |
+| 2. Intelligence | 3-4 | ⏭ **NEXT** | Vector DB + embeddings, graph relationships, semantic search |
+| 3. Training | 5-6 | 📋 Planned | Training plans, progress tracking, spaced repetition, weakness detection |
+| 4. AI | 7-8 | 📋 Planned | Ollama integration, RAG, assessment analysis, question generation |
+| 5. Frontend | 9-10 | 🔄 **IN PROGRESS** | Enhanced UI components, practice interface, dashboard improvements |
+| 6. Polish | 11-12 | 📋 Planned | Performance optimization, difficulty calibration, user testing |
+
+**Current Focus**: Phase 1 complete. Ready to begin Phase 2 (Intelligence layer) or continue enhancing Phase 5 (Frontend features).

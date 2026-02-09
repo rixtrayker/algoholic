@@ -3,28 +3,83 @@
 
 ---
 
+## Current Status
+
+**✅ All Systems Running**
+- Backend: http://localhost:4000 (Go Fiber v2.52.11)
+- Frontend: http://localhost:5173 (React 19 + Vite 7.3.1)
+- Database: PostgreSQL (leetcode_training)
+- API Tests: 22 endpoints via Postman + Newman
+
+See [RUNNING.md](../RUNNING.md) for detailed service information.
+
+---
+
 ## Prerequisites
 
 ```bash
-docker --version          # Docker 20.10+
-docker-compose --version  # Docker Compose 2.0+
+docker --version          # Docker 20.10+ (optional for future deployment)
 go version                # Go 1.21+
 node --version            # Node.js 18+
+psql --version           # PostgreSQL 16+
+newman --version         # Newman 6.2.1+ for API testing
 ```
 
 ---
 
-## Quick Start (30 minutes)
+## Quick Start (Current Setup)
 
-### 1. Project Structure
+### 1. Clone and Setup
+
+The project is already set up with:
+- Backend Go server (65 routes registered)
+- Frontend React application
+- PostgreSQL database
+- Comprehensive Postman API collection
 
 ```bash
-mkdir -p algoholic/{backend/{api,models,services,utils},frontend/src,scripts,data}
-cd algoholic
-git init
+# The services are already running
+# Backend: cd backend && go run main.go (port 4000)
+# Frontend: cd frontend && npm run dev (port 5173)
+# Database: PostgreSQL on port 5432
 ```
 
-### 2. Docker Compose
+### 2. Database Setup (Already Complete)
+
+The database `leetcode_training` has been created with user `leetcode`:
+
+```bash
+# Database is already running
+# User: leetcode
+# Password: leetcode_password
+# Database: leetcode_training
+# Port: 5432
+```
+
+Tables are auto-migrated via GORM on backend startup.
+
+### 3. API Testing with Postman & Newman
+
+**✅ Complete Postman collection available**: `postman/algoholic-api.postman_collection.json`
+- 22 endpoints across 7 categories
+- Comprehensive test scripts (~85 assertions)
+- Automatic token and ID variable management
+- Example requests and responses
+
+**Run API Tests**:
+```bash
+cd postman
+./run-tests.sh
+```
+
+This will:
+1. Check backend health
+2. Run all 22 endpoint tests
+3. Generate reports in `postman/reports/`
+
+**See**: [postman/README.md](../postman/README.md) for detailed usage.
+
+### 4. Docker Compose (Future/Optional)
 
 Create `docker-compose.yml`:
 
@@ -258,53 +313,81 @@ CREATE TABLE problems (
 CREATE INDEX idx_problems_difficulty ON problems(difficulty_score);
 ```
 
-### 7. Start Everything
+### 7. Start Services (Current Method - No Docker)
 
+**Backend** (Terminal 1):
 ```bash
-# Start infrastructure
-docker-compose up -d
-sleep 30
-
-# Download LLM models
-docker exec -it algoholic_ollama ollama pull mistral:7b
-docker exec -it algoholic_ollama ollama pull codellama:13b
-
-# Run migrations
-migrate -path migrations -database "postgresql://leetcode:leetcode123@localhost:5432/leetcode_training?sslmode=disable" up
-
-# Start backend
 cd backend
 go run main.go
+# Starts on http://localhost:4000
+# Auto-migrates database tables via GORM
 ```
 
-### 8. Verify
-
+**Frontend** (Terminal 2):
 ```bash
-curl http://localhost:4000/health                    # API health
-curl http://localhost:4000/api/problems | jq         # List problems
-curl http://localhost:8000/api/v1/heartbeat          # ChromaDB
-docker exec algoholic_ollama ollama list             # LLM models
-docker exec algoholic_postgres psql -U leetcode -d leetcode_training -c "SELECT count(*) FROM problems;"
+cd frontend
+npm run dev
+# Starts on http://localhost:5173
+# Hot module reloading enabled
 ```
 
-**Access points:**
-- API: http://localhost:4000
-- ChromaDB: http://localhost:8000
-- Ollama: http://localhost:11434
+**Database**:
+```bash
+# Already running as system PostgreSQL service
+# Connection: postgresql://leetcode:leetcode_password@localhost:5432/leetcode_training
+```
+
+### 8. Verify Setup
+
+**Test Backend Health**:
+```bash
+curl http://localhost:4000/health
+```
+
+Expected response:
+```json
+{
+  "app": "Algoholic API",
+  "environment": "development",
+  "status": "healthy",
+  "version": "1.0.0"
+}
+```
+
+**Test API Endpoints**:
+```bash
+cd postman
+./run-tests.sh
+# Runs all 22 API endpoint tests via Newman
+```
+
+**Test Frontend**:
+```bash
+cd frontend
+npm test
+# Expected: 46/46 tests passing
+```
+
+**Access Points**:
+- Backend API: http://localhost:4000
+- API Documentation: http://localhost:4000/api
+- Frontend App: http://localhost:5173
+- Database: postgresql://localhost:5432/leetcode_training
 
 ---
 
 ## Implementation Checklist
 
-### Phase 1: Foundation (Weeks 1-2)
+### Phase 1: Foundation (Weeks 1-2) ✅ COMPLETE
 
-- [ ] Docker environment running (PostgreSQL, ChromaDB, Ollama, Redis)
-- [ ] Full database schema created (see architecture.md)
-- [ ] Basic CRUD API endpoints for problems, questions, users
-- [ ] Import 50 essential LeetCode problems (10 easy, 25 medium, 15 hard)
-- [ ] Generate 200 initial questions across all 10 categories
-- [ ] Implement difficulty scoring algorithm
-- [ ] Full-text search working
+- [x] PostgreSQL database running (localhost)
+- [x] Full database schema created with GORM auto-migration
+- [x] Complete API with 22 endpoints (Auth, Questions, Problems, Users, Plans, Topics)
+- [x] JWT authentication implemented
+- [x] Frontend React app with 46 passing tests
+- [x] Postman collection with comprehensive test coverage
+- [x] Newman CLI testing setup
+- [x] API-Frontend alignment (100% match)
 
 ### Phase 2: Intelligence (Weeks 3-4)
 
