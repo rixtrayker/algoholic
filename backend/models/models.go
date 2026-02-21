@@ -55,15 +55,15 @@ func (a *StringArray) Scan(value interface{}) error {
 
 // User represents a platform user
 type User struct {
-	UserID              int       `json:"user_id" gorm:"primaryKey;column:user_id"`
-	Username            string    `json:"username" gorm:"column:username;uniqueIndex;not null"`
-	Email               string    `json:"email" gorm:"column:email;uniqueIndex;not null"`
-	PasswordHash        string    `json:"-" gorm:"column:password_hash;not null"`
-	Preferences         JSONB     `json:"preferences,omitempty" gorm:"column:preferences;type:jsonb"`
-	CurrentStreakDays   int       `json:"current_streak_days" gorm:"column:current_streak_days;default:0"`
-	TotalStudyTime      int64     `json:"total_study_time_seconds" gorm:"column:total_study_time_seconds;default:0"`
-	CreatedAt           time.Time `json:"created_at" gorm:"column:created_at;autoCreateTime"`
-	LastActiveAt        time.Time `json:"last_active_at" gorm:"column:last_active_at;autoUpdateTime"`
+	UserID            int       `json:"user_id" gorm:"primaryKey;column:user_id"`
+	Username          string    `json:"username" gorm:"column:username;uniqueIndex;not null"`
+	Email             string    `json:"email" gorm:"column:email;uniqueIndex;not null"`
+	PasswordHash      string    `json:"-" gorm:"column:password_hash;not null"`
+	Preferences       JSONB     `json:"preferences,omitempty" gorm:"column:preferences;type:jsonb"`
+	CurrentStreakDays int       `json:"current_streak_days" gorm:"column:current_streak_days;default:0"`
+	TotalStudyTime    int64     `json:"total_study_time_seconds" gorm:"column:total_study_time_seconds;default:0"`
+	CreatedAt         time.Time `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	LastActiveAt      time.Time `json:"last_active_at" gorm:"column:last_active_at;autoUpdateTime"`
 }
 
 func (User) TableName() string {
@@ -120,10 +120,10 @@ func (Topic) TableName() string {
 
 // ProblemTopic links problems to topics
 type ProblemTopic struct {
-	ProblemID      int      `json:"problem_id" gorm:"primaryKey;column:problem_id"`
-	TopicID        int      `json:"topic_id" gorm:"primaryKey;column:topic_id"`
-	RelevanceScore float64  `json:"relevance_score" gorm:"column:relevance_score;default:1.0"`
-	IsPrimary      bool     `json:"is_primary" gorm:"column:is_primary;default:false"`
+	ProblemID      int     `json:"problem_id" gorm:"primaryKey;column:problem_id"`
+	TopicID        int     `json:"topic_id" gorm:"primaryKey;column:topic_id"`
+	RelevanceScore float64 `json:"relevance_score" gorm:"column:relevance_score;default:1.0"`
+	IsPrimary      bool    `json:"is_primary" gorm:"column:is_primary;default:false"`
 }
 
 func (ProblemTopic) TableName() string {
@@ -132,26 +132,26 @@ func (ProblemTopic) TableName() string {
 
 // Question represents a practice question
 type Question struct {
-	QuestionID               int         `json:"question_id" gorm:"primaryKey;column:question_id"`
-	ProblemID                *int        `json:"problem_id,omitempty" gorm:"column:problem_id"`
-	QuestionType             string      `json:"question_type" gorm:"column:question_type;not null"`
-	QuestionSubtype          *string     `json:"question_subtype,omitempty" gorm:"column:question_subtype"`
-	QuestionFormat           string      `json:"question_format" gorm:"column:question_format;not null"`
-	QuestionText             string      `json:"question_text" gorm:"column:question_text;not null"`
-	QuestionData             JSONB       `json:"question_data,omitempty" gorm:"column:question_data;type:jsonb"`
-	AnswerOptions            JSONB       `json:"answer_options,omitempty" gorm:"column:answer_options;type:jsonb"`
-	CorrectAnswer            JSONB       `json:"correct_answer" gorm:"column:correct_answer;type:jsonb;not null"`
-	Explanation              string      `json:"explanation" gorm:"column:explanation;not null"`
-	WrongAnswerExplanations  JSONB       `json:"wrong_answer_explanations,omitempty" gorm:"column:wrong_answer_explanations;type:jsonb"`
-	RelatedConcepts          StringArray `json:"related_concepts,omitempty" gorm:"column:related_concepts;type:text[]"`
-	CommonMistakes           StringArray `json:"common_mistakes,omitempty" gorm:"column:common_mistakes;type:text[]"`
-	DifficultyScore          float64     `json:"difficulty_score" gorm:"column:difficulty_score;not null"`
-	EstimatedTimeSeconds     *int        `json:"estimated_time_seconds,omitempty" gorm:"column:estimated_time_seconds"`
-	TotalAttempts            int         `json:"total_attempts" gorm:"column:total_attempts;default:0"`
-	CorrectAttempts          int         `json:"correct_attempts" gorm:"column:correct_attempts;default:0"`
-	AverageTimeSeconds       *float64    `json:"average_time_seconds,omitempty" gorm:"column:average_time_seconds"`
-	CreatedAt                time.Time   `json:"created_at" gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt                time.Time   `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+	QuestionID              int         `json:"question_id" gorm:"primaryKey;column:question_id"`
+	ProblemID               *int        `json:"problem_id,omitempty" gorm:"column:problem_id"`
+	QuestionType            string      `json:"question_type" gorm:"column:question_type;not null"`
+	QuestionSubtype         *string     `json:"question_subtype,omitempty" gorm:"column:question_subtype"`
+	QuestionFormat          string      `json:"question_format" gorm:"column:question_format;not null"`
+	QuestionText            string      `json:"question_text" gorm:"column:question_text;not null"`
+	QuestionData            JSONB       `json:"question_data,omitempty" gorm:"column:question_data;type:jsonb"`
+	AnswerOptions           JSONB       `json:"answer_options,omitempty" gorm:"column:answer_options;type:jsonb"`
+	CorrectAnswer           JSONB       `json:"correct_answer" gorm:"column:correct_answer;type:jsonb;not null"`
+	Explanation             string      `json:"explanation" gorm:"column:explanation;not null"`
+	WrongAnswerExplanations JSONB       `json:"wrong_answer_explanations,omitempty" gorm:"column:wrong_answer_explanations;type:jsonb"`
+	RelatedConcepts         StringArray `json:"related_concepts,omitempty" gorm:"column:related_concepts;type:text[]"`
+	CommonMistakes          StringArray `json:"common_mistakes,omitempty" gorm:"column:common_mistakes;type:text[]"`
+	DifficultyScore         float64     `json:"difficulty_score" gorm:"column:difficulty_score;not null"`
+	EstimatedTimeSeconds    *int        `json:"estimated_time_seconds,omitempty" gorm:"column:estimated_time_seconds"`
+	TotalAttempts           int         `json:"total_attempts" gorm:"column:total_attempts;default:0"`
+	CorrectAttempts         int         `json:"correct_attempts" gorm:"column:correct_attempts;default:0"`
+	AverageTimeSeconds      *float64    `json:"average_time_seconds,omitempty" gorm:"column:average_time_seconds"`
+	CreatedAt               time.Time   `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt               time.Time   `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (Question) TableName() string {
@@ -184,15 +184,15 @@ func (UserAttempt) TableName() string {
 
 // UserSkill tracks user proficiency per topic
 type UserSkill struct {
-	UserID            int        `json:"user_id" gorm:"primaryKey;column:user_id"`
-	TopicID           int        `json:"topic_id" gorm:"primaryKey;column:topic_id"`
-	ProficiencyLevel  float64    `json:"proficiency_level" gorm:"column:proficiency_level;default:0;check:proficiency_level >= 0 AND proficiency_level <= 100"`
-	QuestionsAttempted int       `json:"questions_attempted" gorm:"column:questions_attempted;default:0"`
-	QuestionsCorrect  int        `json:"questions_correct" gorm:"column:questions_correct;default:0"`
-	ImprovementRate   *float64   `json:"improvement_rate,omitempty" gorm:"column:improvement_rate"`
-	NeedsReview       bool       `json:"needs_review" gorm:"column:needs_review;default:false"`
-	LastPracticedAt   *time.Time `json:"last_practiced_at,omitempty" gorm:"column:last_practiced_at"`
-	NextReviewAt      *time.Time `json:"next_review_at,omitempty" gorm:"column:next_review_at"`
+	UserID             int        `json:"user_id" gorm:"primaryKey;column:user_id"`
+	TopicID            int        `json:"topic_id" gorm:"primaryKey;column:topic_id"`
+	ProficiencyLevel   float64    `json:"proficiency_level" gorm:"column:proficiency_level;default:0;check:proficiency_level >= 0 AND proficiency_level <= 100"`
+	QuestionsAttempted int        `json:"questions_attempted" gorm:"column:questions_attempted;default:0"`
+	QuestionsCorrect   int        `json:"questions_correct" gorm:"column:questions_correct;default:0"`
+	ImprovementRate    *float64   `json:"improvement_rate,omitempty" gorm:"column:improvement_rate"`
+	NeedsReview        bool       `json:"needs_review" gorm:"column:needs_review;default:false"`
+	LastPracticedAt    *time.Time `json:"last_practiced_at,omitempty" gorm:"column:last_practiced_at"`
+	NextReviewAt       *time.Time `json:"next_review_at,omitempty" gorm:"column:next_review_at"`
 }
 
 func (UserSkill) TableName() string {
@@ -201,21 +201,21 @@ func (UserSkill) TableName() string {
 
 // TrainingPlan represents a personalized training plan
 type TrainingPlan struct {
-	PlanID              int          `json:"plan_id" gorm:"primaryKey;column:plan_id"`
-	UserID              int          `json:"user_id" gorm:"column:user_id;not null;index"`
-	Name                string       `json:"name" gorm:"column:name;not null"`
-	Description         *string      `json:"description,omitempty" gorm:"column:description"`
-	PlanType            *string      `json:"plan_type,omitempty" gorm:"column:plan_type"`
-	DifficultyRange     *string      `json:"difficulty_range,omitempty" gorm:"column:difficulty_range"`
-	TargetTopics        StringArray  `json:"target_topics,omitempty" gorm:"column:target_topics;type:integer[]"`
-	TargetPatterns      StringArray  `json:"target_patterns,omitempty" gorm:"column:target_patterns;type:text[]"`
-	DurationDays        *int         `json:"duration_days,omitempty" gorm:"column:duration_days"`
-	QuestionsPerDay     int          `json:"questions_per_day" gorm:"column:questions_per_day;default:5"`
-	AdaptiveDifficulty  bool         `json:"adaptive_difficulty" gorm:"column:adaptive_difficulty;default:true"`
-	ProgressPercentage  float64      `json:"progress_percentage" gorm:"column:progress_percentage;default:0"`
-	Status              string       `json:"status" gorm:"column:status;default:'active'"`
-	StartDate           time.Time    `json:"start_date" gorm:"column:start_date;not null"`
-	CreatedAt           time.Time    `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	PlanID             int         `json:"plan_id" gorm:"primaryKey;column:plan_id"`
+	UserID             int         `json:"user_id" gorm:"column:user_id;not null;index"`
+	Name               string      `json:"name" gorm:"column:name;not null"`
+	Description        *string     `json:"description,omitempty" gorm:"column:description"`
+	PlanType           *string     `json:"plan_type,omitempty" gorm:"column:plan_type"`
+	DifficultyRange    *string     `json:"difficulty_range,omitempty" gorm:"column:difficulty_range"`
+	TargetTopics       StringArray `json:"target_topics,omitempty" gorm:"column:target_topics;type:integer[]"`
+	TargetPatterns     StringArray `json:"target_patterns,omitempty" gorm:"column:target_patterns;type:text[]"`
+	DurationDays       *int        `json:"duration_days,omitempty" gorm:"column:duration_days"`
+	QuestionsPerDay    int         `json:"questions_per_day" gorm:"column:questions_per_day;default:5"`
+	AdaptiveDifficulty bool        `json:"adaptive_difficulty" gorm:"column:adaptive_difficulty;default:true"`
+	ProgressPercentage float64     `json:"progress_percentage" gorm:"column:progress_percentage;default:0"`
+	Status             string      `json:"status" gorm:"column:status;default:'active'"`
+	StartDate          time.Time   `json:"start_date" gorm:"column:start_date;not null"`
+	CreatedAt          time.Time   `json:"created_at" gorm:"column:created_at;autoCreateTime"`
 }
 
 func (TrainingPlan) TableName() string {
@@ -242,19 +242,19 @@ func (TrainingPlanItem) TableName() string {
 
 // Assessment represents a user assessment
 type Assessment struct {
-	AssessmentID      int        `json:"assessment_id" gorm:"primaryKey;column:assessment_id"`
-	UserID            int        `json:"user_id" gorm:"column:user_id;not null;index"`
-	AssessmentType    *string    `json:"assessment_type,omitempty" gorm:"column:assessment_type"`
+	AssessmentID      int         `json:"assessment_id" gorm:"primaryKey;column:assessment_id"`
+	UserID            int         `json:"user_id" gorm:"column:user_id;not null;index"`
+	AssessmentType    *string     `json:"assessment_type,omitempty" gorm:"column:assessment_type"`
 	TopicsCovered     StringArray `json:"topics_covered,omitempty" gorm:"column:topics_covered;type:text[]"`
-	OverallScore      *float64   `json:"overall_score,omitempty" gorm:"column:overall_score"`
-	CategoryScores    JSONB      `json:"category_scores,omitempty" gorm:"column:category_scores;type:jsonb"`
+	OverallScore      *float64    `json:"overall_score,omitempty" gorm:"column:overall_score"`
+	CategoryScores    JSONB       `json:"category_scores,omitempty" gorm:"column:category_scores;type:jsonb"`
 	Strengths         StringArray `json:"strengths,omitempty" gorm:"column:strengths;type:text[]"`
 	Weaknesses        StringArray `json:"weaknesses,omitempty" gorm:"column:weaknesses;type:text[]"`
-	Recommendations   *string    `json:"recommendations,omitempty" gorm:"column:recommendations"`
-	MemorizationScore *float64   `json:"memorization_score,omitempty" gorm:"column:memorization_score"`
-	StartedAt         *time.Time `json:"started_at,omitempty" gorm:"column:started_at"`
-	CompletedAt       *time.Time `json:"completed_at,omitempty" gorm:"column:completed_at"`
-	TimeTakenSeconds  *int       `json:"time_taken_seconds,omitempty" gorm:"column:time_taken_seconds"`
+	Recommendations   *string     `json:"recommendations,omitempty" gorm:"column:recommendations"`
+	MemorizationScore *float64    `json:"memorization_score,omitempty" gorm:"column:memorization_score"`
+	StartedAt         *time.Time  `json:"started_at,omitempty" gorm:"column:started_at"`
+	CompletedAt       *time.Time  `json:"completed_at,omitempty" gorm:"column:completed_at"`
+	TimeTakenSeconds  *int        `json:"time_taken_seconds,omitempty" gorm:"column:time_taken_seconds"`
 }
 
 func (Assessment) TableName() string {
@@ -301,17 +301,99 @@ func (UserList) TableName() string {
 
 // DailyActivity tracks user's daily practice activity for commitment chart
 type DailyActivity struct {
-	ActivityID    int       `json:"activity_id" gorm:"primaryKey;column:activity_id"`
-	UserID        int       `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_date"`
-	Date          time.Time `json:"date" gorm:"column:date;not null;uniqueIndex:idx_user_date;type:date"`
-	ProblemsCount int       `json:"problems_count" gorm:"column:problems_count;default:0"`
-	QuestionsCount int      `json:"questions_count" gorm:"column:questions_count;default:0"`
-	StudyTime     int       `json:"study_time_seconds" gorm:"column:study_time_seconds;default:0"`
-	Streak        int       `json:"streak" gorm:"column:streak;default:0"`
+	ActivityID     int       `json:"activity_id" gorm:"primaryKey;column:activity_id"`
+	UserID         int       `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_date"`
+	Date           time.Time `json:"date" gorm:"column:date;not null;uniqueIndex:idx_user_date;type:date"`
+	ProblemsCount  int       `json:"problems_count" gorm:"column:problems_count;default:0"`
+	QuestionsCount int       `json:"questions_count" gorm:"column:questions_count;default:0"`
+	StudyTime      int       `json:"study_time_seconds" gorm:"column:study_time_seconds;default:0"`
+	Streak         int       `json:"streak" gorm:"column:streak;default:0"`
 }
 
 func (DailyActivity) TableName() string {
 	return "daily_activities"
+}
+
+// SpacedRepetitionReview tracks SM-2 algorithm data per question
+type SpacedRepetitionReview struct {
+	ReviewID       int        `json:"review_id" gorm:"primaryKey;column:review_id"`
+	UserID         int        `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_question"`
+	QuestionID     int        `json:"question_id" gorm:"column:question_id;not null;uniqueIndex:idx_user_question"`
+	EasinessFactor float64    `json:"easiness_factor" gorm:"column:easiness_factor;default:2.5"`
+	IntervalDays   int        `json:"interval_days" gorm:"column:interval_days;default:1"`
+	Repetitions    int        `json:"repetitions" gorm:"column:repetitions;default:0"`
+	NextReviewAt   time.Time  `json:"next_review_at" gorm:"column:next_review_at;not null"`
+	LastReviewAt   *time.Time `json:"last_review_at,omitempty" gorm:"column:last_review_at"`
+	QualityRating  *int       `json:"quality_rating,omitempty" gorm:"column:quality_rating"`
+	CreatedAt      time.Time  `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt      time.Time  `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (SpacedRepetitionReview) TableName() string {
+	return "spaced_repetition_reviews"
+}
+
+// ReviewQueue tracks questions scheduled for review
+type ReviewQueue struct {
+	QueueID      int       `json:"queue_id" gorm:"primaryKey;column:queue_id"`
+	UserID       int       `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_question_queue"`
+	QuestionID   int       `json:"question_id" gorm:"column:question_id;not null;uniqueIndex:idx_user_question_queue"`
+	ScheduledFor time.Time `json:"scheduled_for" gorm:"column:scheduled_for;not null"`
+	Priority     int       `json:"priority" gorm:"column:priority;default:0"`
+	IsOverdue    bool      `json:"is_overdue" gorm:"column:is_overdue;default:false"`
+	AddedAt      time.Time `json:"added_at" gorm:"column:added_at;autoCreateTime"`
+}
+
+func (ReviewQueue) TableName() string {
+	return "review_queue"
+}
+
+// CodeSubmission tracks user code submissions for AI assessment
+type CodeSubmission struct {
+	SubmissionID    int        `json:"submission_id" gorm:"primaryKey;column:submission_id"`
+	UserID          int        `json:"user_id" gorm:"column:user_id;not null;index"`
+	ProblemID       int        `json:"problem_id" gorm:"column:problem_id;not null;index"`
+	Code            string     `json:"code" gorm:"column:code;not null;type:text"`
+	Language        string     `json:"language" gorm:"column:language;not null"`
+	Status          string     `json:"status" gorm:"column:status;default:'pending'"`
+	TestResults     JSONB      `json:"test_results,omitempty" gorm:"column:test_results;type:jsonb"`
+	AIFeedback      JSONB      `json:"ai_feedback,omitempty" gorm:"column:ai_feedback;type:jsonb"`
+	AIScore         *float64   `json:"ai_score,omitempty" gorm:"column:ai_score"`
+	TimeComplexity  *string    `json:"time_complexity,omitempty" gorm:"column:time_complexity"`
+	SpaceComplexity *string    `json:"space_complexity,omitempty" gorm:"column:space_complexity"`
+	ExecutionTimeMs *int       `json:"execution_time_ms,omitempty" gorm:"column:execution_time_ms"`
+	MemoryUsedKb    *int       `json:"memory_used_kb,omitempty" gorm:"column:memory_used_kb"`
+	SubmittedAt     time.Time  `json:"submitted_at" gorm:"column:submitted_at;autoCreateTime"`
+	EvaluatedAt     *time.Time `json:"evaluated_at,omitempty" gorm:"column:evaluated_at"`
+}
+
+func (CodeSubmission) TableName() string {
+	return "code_submissions"
+}
+
+// QuestionHintUsage tracks which hints a user has seen
+type QuestionHintUsage struct {
+	UsageID    int       `json:"usage_id" gorm:"primaryKey;column:usage_id"`
+	UserID     int       `json:"user_id" gorm:"column:user_id;not null;uniqueIndex:idx_user_question_hint"`
+	QuestionID int       `json:"question_id" gorm:"column:question_id;not null;uniqueIndex:idx_user_question_hint"`
+	HintLevel  int       `json:"hint_level" gorm:"column:hint_level;not null;uniqueIndex:idx_user_question_hint"`
+	UsedAt     time.Time `json:"used_at" gorm:"column:used_at;autoCreateTime"`
+}
+
+func (QuestionHintUsage) TableName() string {
+	return "question_hint_usage"
+}
+
+// QuestionWithHints extends Question to include hint fields
+type QuestionWithHints struct {
+	Question
+	HintLevel1 *string `json:"hint_level_1,omitempty" gorm:"column:hint_level_1"`
+	HintLevel2 *string `json:"hint_level_2,omitempty" gorm:"column:hint_level_2"`
+	HintLevel3 *string `json:"hint_level_3,omitempty" gorm:"column:hint_level_3"`
+}
+
+func (QuestionWithHints) TableName() string {
+	return "questions"
 }
 
 // AutoMigrate runs all model migrations
@@ -330,5 +412,9 @@ func AutoMigrate(db *gorm.DB) error {
 		&WeaknessAnalysis{},
 		&UserList{},
 		&DailyActivity{},
+		&SpacedRepetitionReview{},
+		&ReviewQueue{},
+		&CodeSubmission{},
+		&QuestionHintUsage{},
 	)
 }
