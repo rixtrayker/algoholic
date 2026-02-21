@@ -1,9 +1,9 @@
 {
   "info": {
     "name": "Algoholic API",
-    "description": "Complete API collection for Algoholic - LeetCode practice platform with spaced repetition",
+    "description": "Complete API collection for Algoholic - LeetCode practice platform with spaced repetition and Phase 2 intelligence layer (semantic search, graph queries).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "auth": {
     "type": "bearer",
@@ -43,6 +43,16 @@
     },
     {
       "key": "plan_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "topic_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "list_id",
       "value": "",
       "type": "string"
     }
@@ -716,9 +726,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/plans",
+              "raw": "{{base_url}}/api/training-plans",
               "host": ["{{base_url}}"],
-              "path": ["api", "plans"]
+              "path": ["api", "training-plans"]
             },
             "description": "Get list of all available training plans"
           },
@@ -750,16 +760,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/plans/{{plan_id}}",
+              "raw": "{{base_url}}/api/training-plans/{{plan_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "plans", "{{plan_id}}"]
+              "path": ["api", "training-plans", "{{plan_id}}"]
             },
             "description": "Get detailed information about a specific training plan"
           },
           "response": []
         },
         {
-          "name": "Enroll in Plan",
+          "name": "Create Training Plan",
           "event": [
             {
               "listen": "test",
@@ -769,11 +779,16 @@
                   "    pm.response.to.have.status(201);",
                   "});",
                   "",
-                  "pm.test(\"Enrollment confirmed\", function () {",
+                  "pm.test(\"Plan created successfully\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('enrollment_id');",
                   "    pm.expect(jsonData).to.have.property('plan_id');",
-                  "});"
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"plan_id\", jsonData.plan_id);",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -781,13 +796,22 @@
           ],
           "request": {
             "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/plans/{{plan_id}}/enroll",
-              "host": ["{{base_url}}"],
-              "path": ["api", "plans", "{{plan_id}}", "enroll"]
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Training Plan\",\n  \"description\": \"A personalized training plan\",\n  \"duration_days\": 30,\n  \"questions_per_day\": 5\n}"
             },
-            "description": "Enroll user in a training plan"
+            "url": {
+              "raw": "{{base_url}}/api/training-plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "training-plans"]
+            },
+            "description": "Create a new training plan for the authenticated user"
           },
           "response": []
         },
@@ -802,9 +826,10 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Response is an array\", function () {",
+                  "pm.test(\"Response has plans array\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.property('plans');",
+                  "    pm.expect(jsonData.plans).to.be.an('array');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -815,16 +840,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users/plans",
+              "raw": "{{base_url}}/api/training-plans",
               "host": ["{{base_url}}"],
-              "path": ["api", "users", "plans"]
+              "path": ["api", "training-plans"]
             },
-            "description": "Get user's enrolled training plans"
+            "description": "Get user's training plans"
           },
           "response": []
         },
         {
-          "name": "Update Plan Progress",
+          "name": "Complete Plan Item",
           "event": [
             {
               "listen": "test",
@@ -834,9 +859,10 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Progress updated\", function () {",
+                  "pm.test(\"Item completed\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('progress_percentage');",
+                  "    pm.expect(jsonData).to.have.property('is_completed');",
+                  "    pm.expect(jsonData.is_completed).to.eql(true);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -844,23 +870,14 @@
             }
           ],
           "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"completed_items\": 5,\n  \"current_day\": 7\n}"
-            },
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/plans/{{plan_id}}/progress",
+              "raw": "{{base_url}}/api/training-plans/{{plan_id}}/items/1/complete",
               "host": ["{{base_url}}"],
-              "path": ["api", "plans", "{{plan_id}}", "progress"]
+              "path": ["api", "training-plans", "{{plan_id}}", "items", "1", "complete"]
             },
-            "description": "Update progress for an enrolled training plan"
+            "description": "Mark a training plan item as completed"
           },
           "response": []
         }
@@ -880,17 +897,19 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test(\"Response is an array of topics\", function () {",
+                  "pm.test(\"Response has topics array\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.property('topics');",
+                  "    pm.expect(jsonData.topics).to.be.an('array');",
                   "});",
                   "",
-                  "if (pm.response.json().length > 0) {",
+                  "if (pm.response.json().topics && pm.response.json().topics.length > 0) {",
                   "    pm.test(\"Topics have required fields\", function () {",
-                  "        var topic = pm.response.json()[0];",
+                  "        var topic = pm.response.json().topics[0];",
                   "        pm.expect(topic).to.have.property('topic_id');",
                   "        pm.expect(topic).to.have.property('name');",
                   "    });",
+                  "    pm.collectionVariables.set(\"topic_id\", pm.response.json().topics[0].topic_id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -923,8 +942,8 @@
                   "pm.test(\"Performance data is returned\", function () {",
                   "    var jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.have.property('topic_name');",
-                  "    pm.expect(jsonData).to.have.property('accuracy_rate');",
-                  "    pm.expect(jsonData).to.have.property('total_attempts');",
+                  "    pm.expect(jsonData).to.have.property('proficiency_level');",
+                  "    pm.expect(jsonData).to.have.property('questions_attempted');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -935,11 +954,632 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users/topics/1/performance",
+              "raw": "{{base_url}}/api/topics/{{user_id}}/performance/{{topic_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "users", "topics", "1", "performance"]
+              "path": ["api", "topics", "{{user_id}}", "performance", "{{topic_id}}"]
             },
             "description": "Get user's performance for a specific topic"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Phase 2 - Intelligence",
+      "description": "Semantic search, graph queries, and intelligence status endpoints. All endpoints degrade gracefully when ChromaDB or Apache AGE are unavailable.",
+      "item": [
+        {
+          "name": "Semantic Search Problems",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has results array and source\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('results');",
+                  "    pm.expect(jsonData).to.have.property('count');",
+                  "    pm.expect(jsonData).to.have.property('source');",
+                  "    pm.expect(jsonData.results).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Source is vector or fulltext\", function () {",
+                  "    var src = pm.response.json().source;",
+                  "    pm.expect(['vector', 'fulltext']).to.include(src);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/search/problems?q=two+sum&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "search", "problems"],
+              "query": [
+                { "key": "q", "value": "two sum" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Semantic search for problems. Falls back to PostgreSQL full-text search when ChromaDB is unavailable."
+          },
+          "response": [
+            {
+              "name": "Vector search result",
+              "originalRequest": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/search/problems?q=two+sum&limit=5" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"results\": [\n    {\n      \"problem_id\": 1,\n      \"title\": \"Two Sum\",\n      \"slug\": \"two-sum\",\n      \"difficulty_score\": 15.5,\n      \"similarity_score\": 0.92\n    }\n  ],\n  \"count\": 1,\n  \"source\": \"vector\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Semantic Search Questions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has results and source\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('results');",
+                  "    pm.expect(jsonData).to.have.property('source');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/search/questions?q=hash+map&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "search", "questions"],
+              "query": [
+                { "key": "q", "value": "hash map" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Semantic search for questions. Falls back to ILIKE keyword search when ChromaDB is unavailable."
+          },
+          "response": []
+        },
+        {
+          "name": "Find Similar Problems",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has similar_problems and source\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('similar_problems');",
+                  "    pm.expect(jsonData).to.have.property('source');",
+                  "    pm.expect(jsonData.similar_problems).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/problems/{{problem_id}}/similar?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "problems", "{{problem_id}}", "similar"],
+              "query": [
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Find problems similar to the given problem. Uses vector similarity → graph SIMILAR_TO edges → SQL same-pattern fallback."
+          },
+          "response": [
+            {
+              "name": "Similar problems (SQL fallback)",
+              "originalRequest": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/problems/1/similar?limit=5" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"similar_problems\": [\n    {\n      \"problem_id\": 3,\n      \"title\": \"Three Sum\",\n      \"difficulty\": 45.0,\n      \"score\": 0.7\n    }\n  ],\n  \"source\": \"graph\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Learning Path",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has learning_path and steps\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('learning_path');",
+                  "    pm.expect(jsonData).to.have.property('steps');",
+                  "    pm.expect(jsonData.learning_path).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Each step has topic_id and name\", function () {",
+                  "    var path = pm.response.json().learning_path;",
+                  "    if (path.length > 0) {",
+                  "        pm.expect(path[0]).to.have.property('topic_id');",
+                  "        pm.expect(path[0]).to.have.property('name');",
+                  "        pm.expect(path[0]).to.have.property('step');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/graph/learning-path?from=1&to=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "graph", "learning-path"],
+              "query": [
+                { "key": "from", "value": "1", "description": "Starting topic ID" },
+                { "key": "to",   "value": "5", "description": "Destination topic ID" }
+              ]
+            },
+            "description": "Get the shortest prerequisite path between two topics. Uses Apache AGE shortestPath when available, falls back to SQL parent_topic_id chain."
+          },
+          "response": [
+            {
+              "name": "Learning path (SQL fallback)",
+              "originalRequest": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/graph/learning-path?from=1&to=5" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"learning_path\": [\n    { \"topic_id\": 1, \"name\": \"Arrays\", \"slug\": \"arrays\", \"step\": 1 },\n    { \"topic_id\": 5, \"name\": \"Dynamic Programming\", \"slug\": \"dynamic-programming\", \"step\": 2 }\n  ],\n  \"steps\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Topic Prerequisites",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has topic_id, prerequisites, and count\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('topic_id');",
+                  "    pm.expect(jsonData).to.have.property('prerequisites');",
+                  "    pm.expect(jsonData).to.have.property('count');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/topics/5/prerequisites",
+              "host": ["{{base_url}}"],
+              "path": ["api", "topics", "5", "prerequisites"]
+            },
+            "description": "Get prerequisite topics for a given topic. Uses AGE graph when available, falls back to parent_topic_id lookup."
+          },
+          "response": [
+            {
+              "name": "Prerequisites (SQL fallback)",
+              "originalRequest": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/topics/5/prerequisites" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"topic_id\": 5,\n  \"prerequisites\": [\n    {\n      \"topic_id\": 1,\n      \"name\": \"Arrays\",\n      \"slug\": \"arrays\",\n      \"difficulty_level\": 1\n    }\n  ],\n  \"count\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Intelligence Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has vector_db, graph_db, and embedding\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('vector_db');",
+                  "    pm.expect(jsonData).to.have.property('graph_db');",
+                  "    pm.expect(jsonData).to.have.property('embedding');",
+                  "});",
+                  "",
+                  "pm.test(\"Each service has available field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.vector_db).to.have.property('available');",
+                  "    pm.expect(jsonData.graph_db).to.have.property('available');",
+                  "    pm.expect(jsonData.embedding).to.have.property('available');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/intelligence/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "intelligence", "status"]
+            },
+            "description": "Check availability of all Phase 2 intelligence services (ChromaDB, Apache AGE, Ollama/embedding)."
+          },
+          "response": [
+            {
+              "name": "Status (services down)",
+              "originalRequest": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/intelligence/status" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"vector_db\": { \"available\": false, \"provider\": \"chromadb\" },\n  \"graph_db\":  { \"available\": false, \"provider\": \"apache_age\" },\n  \"embedding\": { \"available\": false, \"fallback\": \"keyword_hash\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Admin - Bulk Index Vectors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 503\", function () {",
+                  "    pm.expect([200, 503]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response has indexed counts\", function () {",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('indexed_problems');",
+                  "        pm.expect(jsonData).to.have.property('indexed_questions');",
+                  "        pm.expect(jsonData.status).to.eql('ok');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/index",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "index"]
+            },
+            "description": "Bulk re-index all problems and questions into ChromaDB. Only available in development mode. Returns 503 if ChromaDB is unavailable."
+          },
+          "response": [
+            {
+              "name": "Indexed successfully",
+              "originalRequest": {
+                "method": "POST",
+                "url": { "raw": "{{base_url}}/api/admin/index" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"indexed_problems\": 12,\n  \"indexed_questions\": 10,\n  \"status\": \"ok\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Admin - Seed Graph",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has status\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('ok');",
+                  "    pm.expect(jsonData).to.have.property('age_available');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/seed-graph",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "seed-graph"]
+            },
+            "description": "Seed the Apache AGE graph from the relational database. Creates Problem and Topic nodes, SIMILAR_TO and PREREQUISITE_OF edges. No-op when AGE is not installed. Development mode only."
+          },
+          "response": [
+            {
+              "name": "Seeded (no AGE)",
+              "originalRequest": {
+                "method": "POST",
+                "url": { "raw": "{{base_url}}/api/admin/seed-graph" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\",\n  \"age_available\": false\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Lists",
+      "item": [
+        {
+          "name": "Get User Lists",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has lists array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('lists');",
+                  "    pm.expect(jsonData.lists).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/lists",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lists"]
+            },
+            "description": "Get all user's custom lists"
+          },
+          "response": []
+        },
+        {
+          "name": "Create List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"List created successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('list_id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"list_id\", pm.response.json().list_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Favorite Problems\",\n  \"description\": \"Problems I want to practice more\",\n  \"is_public\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/lists",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lists"]
+            },
+            "description": "Create a new custom list"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Problem to List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Problem added to list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total_items');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"problem_id\": {{problem_id}}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/lists/{{list_id}}/problems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "lists", "{{list_id}}", "problems"]
+            },
+            "description": "Add a problem to a custom list"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Activity",
+      "item": [
+        {
+          "name": "Get Activity Chart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has activities array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('activities');",
+                  "    pm.expect(jsonData.activities).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/activity/chart?days=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "activity", "chart"],
+              "query": [
+                { "key": "days", "value": "30" }
+              ]
+            },
+            "description": "Get user's activity chart data for the commitment calendar"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Activity Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Stats have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total_problems');",
+                  "    pm.expect(jsonData).to.have.property('total_questions');",
+                  "    pm.expect(jsonData).to.have.property('total_study_time');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/activity/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "activity", "stats"]
+            },
+            "description": "Get user's activity statistics"
           },
           "response": []
         }
