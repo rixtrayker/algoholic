@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { LayoutDashboard, Code2, Dumbbell, Target, LogOut, Flame, User, List } from 'lucide-react';
@@ -41,8 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 href="/dashboard"
                 className="flex items-center gap-2 text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors"
               >
-                <Flame className="w-7 h-7" />
-                Algoholic
+                <Image src="/icon.svg" alt="Algoholic" width={32} height={32} className="w-8 h-8" />
+                <span>Algoholic</span>
               </Link>
 
               <div className="hidden md:flex items-center space-x-1">
@@ -123,10 +124,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-600">© 2024 Algoholic. Master DSA for FAANG Interviews.</p>
+            <div className="flex items-center gap-2">
+              <Image src="/icon.svg" alt="Algoholic" width={20} height={20} />
+              <p className="text-sm text-gray-600">© 2024 Algoholic. Master DSA for FAANG Interviews.</p>
+            </div>
             <div className="flex items-center gap-6 text-sm text-gray-600">
-              <a href="#" className="hover:text-primary-600 transition-colors">
-                About
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary-600 transition-colors">
+                GitHub
               </a>
               <a href="#" className="hover:text-primary-600 transition-colors">
                 Help
