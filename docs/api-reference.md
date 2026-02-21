@@ -5,7 +5,7 @@
 - Documentation: [`postman/README.md`](../postman/README.md)
 - Alignment Report: [`api-frontend-alignment.md`](./api-frontend-alignment.md)
 
-**✅ Current Status**: 22 endpoints across 7 categories, all tested with Newman
+**✅ Current Status**: 30 endpoints across 9 categories (Phase 1 + Phase 2 Intelligence Layer)
 
 Base URL: `http://localhost:4000/api`
 
@@ -462,6 +462,155 @@ Delete a training plan.
 
 ---
 
+### Semantic Search Endpoints
+
+#### GET /search/problems
+Semantic search for problems. Uses ChromaDB vector search with keyword-hash fallback when ChromaDB is unavailable.
+
+**Query Parameters:**
+- `q` (string, required) — Search query
+- `limit` (int, default: 10, max: 50)
+
+**Response:** `200 OK`
+```json
+{
+  "results": [
+    {
+      "problem_id": 1,
+      "title": "Two Sum",
+      "similarity_score": 0.92
+    }
+  ],
+  "count": 1,
+  "source": "vector"
+}
+```
+
+`source` is `"vector"` when ChromaDB is used, `"fulltext"` for PostgreSQL full-text fallback.
+
+#### GET /search/questions
+Semantic search for questions.
+
+**Query Parameters:**
+- `q` (string, required)
+- `limit` (int, default: 10, max: 50)
+
+**Response:** `200 OK`
+```json
+{
+  "results": [...],
+  "count": 5,
+  "source": "vector"
+}
+```
+
+`source` is `"vector"` or `"keyword"` (ILIKE fallback).
+
+---
+
+### Graph / Intelligence Endpoints
+
+#### GET /problems/:id/similar
+Find problems similar to a given problem. Uses vector similarity first, graph SIMILAR_TO edges as fallback, then SQL same-pattern query.
+
+**Query Parameters:**
+- `limit` (int, default: 5)
+
+**Response:** `200 OK`
+```json
+{
+  "similar_problems": [
+    {
+      "problem_id": 3,
+      "title": "Three Sum",
+      "difficulty": 45.0,
+      "score": 0.87
+    }
+  ],
+  "source": "vector"
+}
+```
+
+#### GET /graph/learning-path
+Get the shortest prerequisite path between two topics.
+
+**Query Parameters:**
+- `from` (int, required) — Starting topic ID
+- `to` (int, required) — Destination topic ID
+
+**Response:** `200 OK`
+```json
+{
+  "learning_path": [
+    { "topic_id": 1, "name": "Arrays", "slug": "arrays", "step": 1 },
+    { "topic_id": 3, "name": "Two Pointers", "slug": "two-pointers", "step": 2 }
+  ],
+  "steps": 2
+}
+```
+
+#### GET /topics/:id/prerequisites
+Get prerequisite topics for a given topic. Uses AGE graph when available, falls back to `parent_topic_id` SQL lookup.
+
+**Response:** `200 OK`
+```json
+{
+  "topic_id": 5,
+  "prerequisites": [
+    {
+      "topic_id": 1,
+      "name": "Arrays",
+      "slug": "arrays",
+      "difficulty_level": 1
+    }
+  ],
+  "count": 1
+}
+```
+
+#### GET /intelligence/status
+Health check for all Phase 2 intelligence services.
+
+**Response:** `200 OK`
+```json
+{
+  "vector_db": { "available": true,  "provider": "chromadb" },
+  "graph_db":  { "available": false, "provider": "apache_age" },
+  "embedding": { "available": true,  "fallback": "keyword_hash" }
+}
+```
+
+---
+
+### Admin Endpoints (development only)
+
+These endpoints are only available when `APP_ENV=development`.
+
+#### POST /admin/index
+Bulk re-index all problems and questions into ChromaDB.
+
+**Response:** `200 OK`
+```json
+{
+  "indexed_problems": 12,
+  "indexed_questions": 10,
+  "status": "ok"
+}
+```
+
+#### POST /admin/seed-graph
+Seed the Apache AGE graph from the relational database (topics, problems, relationships).
+
+**Response:** `200 OK`
+```json
+{
+  "status": "ok",
+  "age_available": true
+}
+```
+
+---
+
 ### Health Endpoint
 
 #### GET /health
@@ -533,12 +682,20 @@ GET /api/questions?min_difficulty=50&max_difficulty=75
 
 ## Complete Endpoint List
 
-**Total: 36 endpoints**
+**Total: 44 endpoints**
 
-### Public Endpoints (3)
+### Public Endpoints (11)
 - `GET /health`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `GET /api/search/problems`
+- `GET /api/search/questions`
+- `GET /api/problems/:id/similar`
+- `GET /api/graph/learning-path`
+- `GET /api/topics/:id/prerequisites`
+- `GET /api/intelligence/status`
+- `POST /api/admin/index` _(dev only)_
+- `POST /api/admin/seed-graph` _(dev only)_
 
 ### Protected Endpoints (33)
 - Authentication: 2
@@ -546,3 +703,9 @@ GET /api/questions?min_difficulty=50&max_difficulty=75
 - Questions: 6
 - Users: 9
 - Training Plans: 11
+
+### Phase 2 Intelligence Endpoints (8)
+- Semantic Search: 2
+- Graph Queries: 3
+- Intelligence Status: 1
+- Admin: 2 _(dev only)_
