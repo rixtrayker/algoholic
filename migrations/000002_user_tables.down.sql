@@ -1,0 +1,14 @@
+-- 000002_user_tables.down.sql
+DROP TABLE IF EXISTS question_hint_usage CASCADE;
+DROP TABLE IF EXISTS code_submissions CASCADE;
+DROP TABLE IF EXISTS review_queue CASCADE;
+DROP TABLE IF EXISTS spaced_repetition_reviews CASCADE;
+DROP TABLE IF EXISTS daily_activities CASCADE;
+DROP TABLE IF EXISTS user_lists CASCADE;
+DROP TABLE IF EXISTS weakness_analysis CASCADE;
+DROP TABLE IF EXISTS assessments CASCADE;
+DROP TABLE IF EXISTS training_plan_items CASCADE;
+DROP TABLE IF EXISTS training_plans CASCADE;
+DROP TABLE IF EXISTS user_skills CASCADE;
+DROP TABLE IF EXISTS user_attempts CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
