@@ -19,6 +19,11 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	userService := services.NewUserService(db)
 	trainingPlanService := services.NewTrainingPlanService(db, questionService, userService)
 
+	// Phase 2: Intelligence services
+	embedder := services.NewEmbeddingService(cfg.Ollama.URL, cfg.Ollama.EmbeddingModel)
+	vectorService := services.NewVectorService(cfg.ChromaDB.URL, embedder)
+	graphService := services.NewGraphService(db)
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
 	problemHandler := handlers.NewProblemHandler(problemService)
@@ -27,6 +32,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	trainingPlanHandler := handlers.NewTrainingPlanHandler(trainingPlanService)
 	listHandler := handlers.NewListHandler(db)
 	activityHandler := handlers.NewActivityHandler(db)
+	searchHandler := handlers.NewSearchHandler(db, vectorService, graphService)
+	topicHandler := handlers.NewTopicHandler(db)
 
 	// Public routes
 	api := app.Group("/api")
@@ -63,14 +70,23 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	problems.Get("/:id", problemHandler.GetProblem)
 	problems.Get("/slug/:slug", problemHandler.GetProblemBySlug)
 	problems.Get("/:id/topics", problemHandler.GetProblemTopics)
+	problems.Get("/:id/similar", searchHandler.FindSimilarProblems)
 
 	// Question routes
 	questions := api.Group("/questions")
 	questions.Get("/", questionHandler.GetQuestions)
 	questions.Get("/random", questionHandler.GetRandomQuestion)
 	questions.Get("/:id", questionHandler.GetQuestion)
+	questions.Get("/:id/hint", questionHandler.GetHint)
 	protected.Post("/questions/:id/answer", questionHandler.SubmitAnswer)
 	protected.Get("/questions/:id/attempts", questionHandler.GetUserAttempts)
+
+	// Topic routes (public)
+	topics := api.Group("/topics")
+	topics.Get("/", topicHandler.GetAllTopics)
+	topics.Get("/:id", topicHandler.GetTopicByID)
+	topics.Get("/:id/prerequisites", searchHandler.GetTopicPrerequisites)
+	topics.Get("/:userId/performance/:topicId", topicHandler.GetTopicPerformance)
 
 	// Problem questions
 	api.Get("/problems/:problemId/questions", questionHandler.GetQuestionsByProblem)
@@ -118,6 +134,18 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	activity.Get("/history", activityHandler.GetPracticeHistory)
 	activity.Post("/record", activityHandler.RecordActivity)
 
+	// Phase 2: Semantic search routes (public)
+	search := api.Group("/search")
+	search.Get("/problems", searchHandler.SemanticSearchProblems)
+	search.Get("/questions", searchHandler.SemanticSearchQuestions)
+
+	// Phase 2: Graph routes (public)
+	graph := api.Group("/graph")
+	graph.Get("/learning-path", searchHandler.GetLearningPath)
+
+	// Phase 2: Intelligence status (public health-check)
+	api.Get("/intelligence/status", searchHandler.IntelligenceStatus)
+
 	// Development-only routes
 	if cfg.IsDevelopment() {
 		api.Get("/config", func(c *fiber.Ctx) error {
@@ -130,5 +158,10 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 				"rag":      cfg.RAG,
 			})
 		})
+
+		// Phase 2: Admin endpoints (development only)
+		admin := api.Group("/admin")
+		admin.Post("/index", searchHandler.IndexVectors)
+		admin.Post("/seed-graph", searchHandler.SeedGraph)
 	}
 }
