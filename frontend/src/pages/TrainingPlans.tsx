@@ -6,10 +6,12 @@ import { Calendar, Target, TrendingUp, Play, Pause, Trash2 } from 'lucide-react'
 export default function TrainingPlans() {
   const queryClient = useQueryClient();
 
-  const { data: plans, isLoading } = useQuery({
+  const { data: plansData, isLoading } = useQuery({
     queryKey: ['training-plans'],
     queryFn: trainingPlansAPI.getPlans,
   });
+
+  const plans = plansData?.plans || [];
 
   const pauseMutation = useMutation({
     mutationFn: (planId: number) => trainingPlansAPI.pausePlan(planId),

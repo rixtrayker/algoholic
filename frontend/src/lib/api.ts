@@ -206,17 +206,28 @@ export const questionsAPI = {
   submitAnswer: async (
     questionId: number,
     userAnswer: any,
-    timeTaken: number
+    timeTaken: number,
+    hintsUsed?: number,
+    confidenceLevel?: number,
+    trainingPlanId?: number
   ) => {
     const { data } = await api.post(`/questions/${questionId}/answer`, {
-      answer: userAnswer,
+      user_answer: userAnswer,
       time_taken_seconds: timeTaken,
+      hints_used: hintsUsed || 0,
+      confidence_level: confidenceLevel,
+      training_plan_id: trainingPlanId,
     });
     return data;
   },
 
   getHint: async (questionId: number) => {
     const { data } = await api.get(`/questions/${questionId}/hint`);
+    return data;
+  },
+
+  getAttempts: async (questionId: number) => {
+    const { data } = await api.get(`/questions/${questionId}/attempts`);
     return data;
   },
 };
@@ -262,31 +273,13 @@ export const userAPI = {
 // Training Plans API
 export const trainingPlansAPI = {
   getPlans: async () => {
-    const { data } = await api.get('/plans');
-    return data as TrainingPlan[];
-  },
-
-  getMyPlans: async () => {
-    const { data } = await api.get('/users/plans');
-    return data as TrainingPlan[];
+    const { data } = await api.get('/training-plans');
+    return data as { plans: TrainingPlan[]; count: number };
   },
 
   getPlan: async (id: number) => {
-    const { data } = await api.get(`/plans/${id}`);
+    const { data } = await api.get(`/training-plans/${id}`);
     return data as TrainingPlan;
-  },
-
-  enrollInPlan: async (planId: number) => {
-    const { data } = await api.post(`/plans/${planId}/enroll`);
-    return data;
-  },
-
-  updatePlanProgress: async (planId: number, progressData: {
-    completed_items: number;
-    current_day: number;
-  }) => {
-    const { data } = await api.put(`/plans/${planId}/progress`, progressData);
-    return data;
   },
 
   createPlan: async (planData: {
@@ -301,32 +294,42 @@ export const trainingPlansAPI = {
     difficulty_max: number;
     adaptive_difficulty: boolean;
   }) => {
-    const { data } = await api.post('/plans', planData);
+    const { data } = await api.post('/training-plans', planData);
     return data;
   },
 
   getNextQuestion: async (planId: number) => {
-    const { data } = await api.get(`/plans/${planId}/next`);
+    const { data } = await api.get(`/training-plans/${planId}/next`);
     return data as Question;
   },
 
+  getPlanItems: async (planId: number) => {
+    const { data } = await api.get(`/training-plans/${planId}/items`);
+    return data;
+  },
+
   getTodaysQuestions: async (planId: number) => {
-    const { data} = await api.get(`/plans/${planId}/today`);
+    const { data } = await api.get(`/training-plans/${planId}/today`);
+    return data;
+  },
+
+  completeItem: async (planId: number, itemId: number) => {
+    const { data } = await api.post(`/training-plans/${planId}/items/${itemId}/complete`);
     return data;
   },
 
   pausePlan: async (planId: number) => {
-    const { data } = await api.post(`/plans/${planId}/pause`);
+    const { data } = await api.post(`/training-plans/${planId}/pause`);
     return data;
   },
 
   resumePlan: async (planId: number) => {
-    const { data } = await api.post(`/plans/${planId}/resume`);
+    const { data } = await api.post(`/training-plans/${planId}/resume`);
     return data;
   },
 
   deletePlan: async (planId: number) => {
-    await api.delete(`/plans/${planId}`);
+    await api.delete(`/training-plans/${planId}`);
   },
 };
 
@@ -337,8 +340,18 @@ export const topicsAPI = {
     return data;
   },
 
-  getTopicPerformance: async (topicId: number) => {
-    const { data } = await api.get(`/users/topics/${topicId}/performance`);
+  getTopic: async (id: number) => {
+    const { data } = await api.get(`/topics/${id}`);
+    return data;
+  },
+
+  getTopicPrerequisites: async (id: number) => {
+    const { data } = await api.get(`/topics/${id}/prerequisites`);
+    return data;
+  },
+
+  getTopicPerformance: async (userId: number, topicId: number) => {
+    const { data } = await api.get(`/topics/${userId}/performance/${topicId}`);
     return data;
   },
 };

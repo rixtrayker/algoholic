@@ -8,6 +8,8 @@ export default function Practice() {
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [startTime, setStartTime] = useState(Date.now());
   const [result, setResult] = useState<any>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const [hintsUsed, setHintsUsed] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: question, refetch, isLoading } = useQuery({
@@ -20,14 +22,13 @@ export default function Practice() {
       questionsAPI.submitAnswer(
         question!.question_id,
         { answer },
-        Math.floor((Date.now() - startTime) / 1000)
+        Math.floor((Date.now() - startTime) / 1000),
+        hintsUsed
       ),
     onSuccess: (data) => {
       setResult(data);
-      // Invalidate stats to refresh dashboard
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
 
-      // Show success notification
       if (data.is_correct) {
         toast.success('Correct! Well done!');
       } else {
@@ -39,15 +40,32 @@ export default function Practice() {
     },
   });
 
+  const hintMutation = useMutation({
+    mutationFn: () => questionsAPI.getHint(question!.question_id),
+    onSuccess: (data) => {
+      setHint(data.hint);
+      setHintsUsed((prev) => prev + 1);
+    },
+    onError: () => {
+      toast.error('No hint available for this question');
+    },
+  });
+
   const handleSubmit = () => {
     if (!selectedAnswer) return;
     submitMutation.mutate(selectedAnswer);
+  };
+
+  const handleHint = () => {
+    hintMutation.mutate();
   };
 
   const handleNext = () => {
     setResult(null);
     setSelectedAnswer('');
     setStartTime(Date.now());
+    setHint(null);
+    setHintsUsed(0);
     refetch();
   };
 
@@ -150,11 +168,27 @@ export default function Practice() {
                   </>
                 )}
               </button>
-              <button className="btn-secondary flex items-center gap-2">
+              <button
+                onClick={handleHint}
+                disabled={hintMutation.isPending || hint !== null}
+                className="btn-secondary flex items-center gap-2"
+              >
                 <Lightbulb className="w-4 h-4" />
-                Hint
+                {hint ? 'Used' : 'Hint'}
               </button>
             </div>
+
+            {hint && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-yellow-900 mb-1">Hint</p>
+                    <p className="text-yellow-800 text-sm">{hint}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* Result Display */
