@@ -169,3 +169,38 @@ func (h *QuestionHandler) GetUserAttempts(c *fiber.Ctx) error {
 		"count":    len(attempts),
 	})
 }
+
+// GetHint retrieves a hint for a question
+func (h *QuestionHandler) GetHint(c *fiber.Ctx) error {
+	questionID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid question ID",
+		})
+	}
+
+	hintLevel := c.QueryInt("level", 1)
+	if hintLevel < 1 || hintLevel > 3 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Hint level must be between 1 and 3",
+		})
+	}
+
+	hint, err := h.questionService.GetHint(questionID, hintLevel)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userID, _ := middleware.GetUserID(c)
+	if userID > 0 {
+		h.questionService.RecordHintUsage(userID, questionID, hintLevel)
+	}
+
+	return c.JSON(fiber.Map{
+		"hint":        hint,
+		"level":       hintLevel,
+		"question_id": questionID,
+	})
+}

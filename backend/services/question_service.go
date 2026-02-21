@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"gorm.io/gorm"
 	"github.com/yourusername/algoholic/models"
+	"gorm.io/gorm"
 )
 
 // QuestionService handles question-related operations
@@ -88,23 +88,23 @@ func (s *QuestionService) GetRandomQuestion(questionType string, minDifficulty, 
 
 // AnswerRequest represents a question answer submission
 type AnswerRequest struct {
-	QuestionID   int                    `json:"question_id"`
-	UserAnswer   map[string]interface{} `json:"user_answer"`
-	TimeTaken    int                    `json:"time_taken_seconds"`
-	HintsUsed    int                    `json:"hints_used"`
-	Confidence   *int                   `json:"confidence_level,omitempty"`
-	TrainingPlanID *int                 `json:"training_plan_id,omitempty"`
+	QuestionID     int                    `json:"question_id"`
+	UserAnswer     map[string]interface{} `json:"user_answer"`
+	TimeTaken      int                    `json:"time_taken_seconds"`
+	HintsUsed      int                    `json:"hints_used"`
+	Confidence     *int                   `json:"confidence_level,omitempty"`
+	TrainingPlanID *int                   `json:"training_plan_id,omitempty"`
 }
 
 // AnswerResponse represents the result of answering a question
 type AnswerResponse struct {
-	IsCorrect               bool                   `json:"is_correct"`
-	CorrectAnswer           map[string]interface{} `json:"correct_answer"`
-	Explanation             string                 `json:"explanation"`
-	WrongAnswerExplanation  string                 `json:"wrong_answer_explanation,omitempty"`
-	AttemptID               int                    `json:"attempt_id"`
-	PointsEarned            int                    `json:"points_earned"`
-	NewProficiencyLevel     float64                `json:"new_proficiency_level,omitempty"`
+	IsCorrect              bool                   `json:"is_correct"`
+	CorrectAnswer          map[string]interface{} `json:"correct_answer"`
+	Explanation            string                 `json:"explanation"`
+	WrongAnswerExplanation string                 `json:"wrong_answer_explanation,omitempty"`
+	AttemptID              int                    `json:"attempt_id"`
+	PointsEarned           int                    `json:"points_earned"`
+	NewProficiencyLevel    float64                `json:"new_proficiency_level,omitempty"`
 }
 
 // SubmitAnswer processes a question answer
@@ -203,29 +203,86 @@ func (s *QuestionService) CheckMultipleChoice(question *models.Question, userAns
 	return userSelection == correctAnswer
 }
 
-// CheckCode validates code answers (simplified - needs actual code execution)
+// CheckCode validates code answers with actual execution
 func (s *QuestionService) CheckCode(question *models.Question, userAnswer map[string]interface{}) bool {
-	// TODO: Implement actual code execution and validation
-	// For now, just check if code is provided
 	code, ok := userAnswer["code"].(string)
-	return ok && len(code) > 0
+	if !ok || len(code) == 0 {
+		return false
+	}
+
+	language, _ := userAnswer["language"].(string)
+	if language == "" {
+		language = "python" // default to Python
+	}
+
+	// Get test cases from correct_answer
+	testCases, ok := question.CorrectAnswer["test_cases"]
+	if !ok {
+		// Fallback: if no test cases, just validate code structure
+		executor := NewCodeExecutor("")
+		return executor.ValidateCode(code, language)
+	}
+
+	// Convert test cases to proper format
+	var testCaseList []interface{}
+	switch v := testCases.(type) {
+	case []interface{}:
+		testCaseList = v
+	default:
+		// Invalid format, fallback to structure validation
+		executor := NewCodeExecutor("")
+		return executor.ValidateCode(code, language)
+	}
+
+	// Run code execution tests
+	executor := NewCodeExecutor("") // Uses default Judge0 URL
+	result, err := executor.RunTests(code, language, testCaseList)
+
+	if err != nil {
+		// If execution service is unavailable, fallback to validation
+		return executor.ValidateCode(code, language)
+	}
+
+	return result.AllPassed
 }
 
-// CheckText validates text answers
+// CheckText validates text answers with fuzzy matching
 func (s *QuestionService) CheckText(question *models.Question, userAnswer map[string]interface{}) bool {
-	// TODO: Implement fuzzy matching or keyword-based validation
-	// For now, simple exact match
 	userText, ok := userAnswer["answer"].(string)
 	if !ok {
 		return false
 	}
 
-	correctText, ok := question.CorrectAnswer["answer"].(string)
+	correctAnswer, ok := question.CorrectAnswer["answer"]
 	if !ok {
 		return false
 	}
 
-	return userText == correctText
+	validator := NewTextValidator()
+
+	// Support multiple correct answer formats
+	switch v := correctAnswer.(type) {
+	case string:
+		// Single correct answer
+		return validator.FuzzyMatch(userText, v)
+
+	case []interface{}:
+		// Multiple acceptable answers
+		acceptableAnswers := make([]string, 0, len(v))
+		for _, ans := range v {
+			if ansStr, ok := ans.(string); ok {
+				acceptableAnswers = append(acceptableAnswers, ansStr)
+			}
+		}
+		return validator.MatchMultiple(userText, acceptableAnswers)
+
+	default:
+		// Fallback to exact match if format is unexpected
+		if str, ok := v.(string); ok {
+			return validator.FuzzyMatch(userText, str)
+		}
+		return false
+	}
 }
 
 // CheckRanking validates ranking answers
@@ -327,4 +384,51 @@ func (s *QuestionService) GetRecentAttempts(userID int, limit int) ([]models.Use
 		Limit(limit).
 		Find(&attempts).Error
 	return attempts, err
+}
+
+// GetHint retrieves a hint for a question
+func (s *QuestionService) GetHint(questionID int, hintLevel int) (string, error) {
+	var question models.QuestionWithHints
+	if err := s.db.Table("questions").Where("question_id = ?", questionID).First(&question).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.New("question not found")
+		}
+		return "", err
+	}
+
+	var hint *string
+	switch hintLevel {
+	case 1:
+		hint = question.HintLevel1
+	case 2:
+		hint = question.HintLevel2
+	case 3:
+		hint = question.HintLevel3
+	default:
+		return "", errors.New("invalid hint level (must be 1-3)")
+	}
+
+	if hint == nil || *hint == "" {
+		return "", errors.New("no hint available at this level")
+	}
+
+	return *hint, nil
+}
+
+// RecordHintUsage records that a user used a hint
+func (s *QuestionService) RecordHintUsage(userID, questionID, hintLevel int) error {
+	usage := models.QuestionHintUsage{
+		UserID:     userID,
+		QuestionID: questionID,
+		HintLevel:  hintLevel,
+	}
+
+	if err := s.db.Create(&usage).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil
+		}
+		return err
+	}
+
+	return nil
 }
