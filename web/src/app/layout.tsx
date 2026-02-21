@@ -9,6 +9,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://algoholic.dev'),
   title: {
     default: 'Algoholic - Master DSA for FAANG Interviews',
     template: '%s | Algoholic',
