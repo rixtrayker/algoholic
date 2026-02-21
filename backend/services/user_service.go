@@ -285,3 +285,46 @@ func (s *UserService) GetUserSkills(userID int) ([]models.UserSkill, error) {
 		Find(&skills).Error
 	return skills, err
 }
+
+// RecordDailyActivity records that a user practiced today
+func (s *UserService) RecordDailyActivity(userID int, timeTaken int) error {
+	today := time.Now().Truncate(24 * time.Hour)
+
+	var activity models.DailyActivity
+	err := s.db.Where("user_id = ? AND date = ?", userID, today).
+		First(&activity).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Create new activity record
+		var user models.User
+		s.db.First(&user, userID)
+
+		activity = models.DailyActivity{
+			UserID:         userID,
+			Date:           today,
+			QuestionsCount: 1,
+			StudyTime:      timeTaken,
+			Streak:         user.CurrentStreakDays,
+		}
+
+		return s.db.Create(&activity).Error
+	}
+
+	// Update existing activity
+	activity.QuestionsCount++
+	activity.StudyTime += timeTaken
+
+	return s.db.Save(&activity).Error
+}
+
+// GetRecentActivities returns user's recent practice activities
+func (s *UserService) GetRecentActivities(userID int, days int) ([]models.DailyActivity, error) {
+	var activities []models.DailyActivity
+	cutoffDate := time.Now().AddDate(0, 0, -days)
+
+	err := s.db.Where("user_id = ? AND date >= ?", userID, cutoffDate).
+		Order("date DESC").
+		Find(&activities).Error
+
+	return activities, err
+}
