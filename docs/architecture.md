@@ -23,34 +23,41 @@
 
 ## 1. System Overview
 
-**✅ Current Status**: Phase 1 Complete - All Core Services Running
-- Backend API: http://localhost:4000 (Go Fiber v2.52.11, 65 routes)
-- Frontend: http://localhost:5173 (React 19 + Vite 7.3.1)
-- Database: PostgreSQL (leetcode_training)
-- API Tests: Postman Collection + Newman (22 endpoints)
+**✅ Current Status**: Phase 2 Complete - Intelligence Layer Active
+
+| Service | URL | Details |
+|---------|-----|---------|
+| Backend API | http://localhost:4000 | Go Fiber, 44+ endpoints |
+| Web (Next.js) | http://localhost:3000 | Next.js 14 + App Router |
+| Frontend (Legacy) | http://localhost:5173 | React 19 + Vite (deprecated) |
+| Database | postgresql://localhost:5432 | PostgreSQL (leetcode_training) |
+| API Tests | - | 30+ endpoints via Postman |
 
 ### Technology Stack (Current Implementation)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│     Frontend (React 19 + Tailwind CSS v4) ✅        │
-│     Port: 5173 | Vite HMR | 46 Tests Passing        │
+│   Web (Next.js 14 + App Router) ✅ PRIMARY          │
+│   Port: 3000 | Static Gen | React Query | Zustand   │
+├─────────────────────────────────────────────────────┤
+│   Frontend (React 19 + Vite) ⚠️ DEPRECATED          │
+│   Port: 5173 | HMR | Legacy                         │
 └────────────────────────┬────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────┐
-│          Backend (Go + Fiber v2.52.11) ✅           │
-│     Port: 4000 | GORM Auto-Migration | JWT Auth     │
+│          Backend (Go + Fiber v2) ✅                 │
+│     Port: 4000 | GORM | JWT Auth | 44+ Routes       │
 └──┬──────────┬──────────┬──────────┬─────────────────┘
    │          │          │          │
 ┌──▼────────┐┌▼────────┐┌▼────────┐┌▼──────────────┐
-│PostgreSQL ││ChromaDB/ ││Ollama/  ││Redis          │
-│✅ Running ││⏭ Phase 2││⏭ Phase 2││⏭ Phase 2     │
-│Port: 5432 ││(Vectors) ││(LLM)   ││(Cache)        │
+│PostgreSQL ││ChromaDB ││Ollama/  ││Redis          │
+│✅ Running ││✅ Active││✅ Active││⏭ Optional    │
+│Port: 5432 ││(Vectors)││(LLM)   ││(Cache)        │
 └───────────┘└──────────┘└─────────┘└────────────────┘
                     │
               ┌─────▼──────┐
               │ RAG Pipeline│
-              │  ⏭ Phase 2 │
+              │  ✅ Active  │
               └────────────┘
 ```
 
@@ -58,13 +65,14 @@
 
 | Layer | Technology | Status | Purpose |
 |-------|-----------|--------|---------|
-| API | Go Fiber v2.52.11 | ✅ Running | 22 REST endpoints with JWT auth |
-| Frontend | React 19 + Vite 7.3.1 | ✅ Running | Interactive UI with Tailwind CSS v4 |
-| Relational | PostgreSQL 16 | ✅ Running | Problems, questions, users, progress, training plans |
+| Web | Next.js 14 + App Router | ✅ Primary | SSR/SSG, React Query, Zustand |
+| Frontend | React 19 + Vite | ⚠️ Deprecated | Legacy UI |
+| API | Go Fiber v2 | ✅ Running | 44+ REST endpoints with JWT auth |
+| Relational | PostgreSQL 16 | ✅ Running | Problems, questions, users, progress |
 | Testing | Newman 6.2.1 | ✅ Active | API testing with Postman collection |
-| Graph | Apache AGE | ⏭ Phase 2 | Problem→Problem, Topic→Topic relationships, learning paths |
-| Semantic | ChromaDB/Qdrant | ⏭ Phase 2 | Similarity search, RAG context, recommendations |
-| AI | Ollama (local LLM) | ⏭ Phase 2 | Assessment, question generation, weakness analysis |
+| Graph | Apache AGE | ✅ Active | Problem→Problem, Topic→Topic relationships |
+| Semantic | ChromaDB | ✅ Active | Similarity search, RAG context |
+| AI | Ollama (local LLM) | ✅ Active | Assessment, embeddings, analysis |
 
 ---
 
@@ -904,11 +912,11 @@ cd postman
 
 | Phase | Weeks | Status | Deliverable |
 |-------|-------|--------|-------------|
-| 1. Foundation | 1-2 | ✅ **COMPLETE** | PostgreSQL schema, 22 API endpoints, JWT auth, Frontend with 46 tests, Postman collection |
-| 2. Intelligence | 3-4 | ⏭ **NEXT** | Vector DB + embeddings, graph relationships, semantic search |
-| 3. Training | 5-6 | 📋 Planned | Training plans, progress tracking, spaced repetition, weakness detection |
-| 4. AI | 7-8 | 📋 Planned | Ollama integration, RAG, assessment analysis, question generation |
-| 5. Frontend | 9-10 | 🔄 **IN PROGRESS** | Enhanced UI components, practice interface, dashboard improvements |
-| 6. Polish | 11-12 | 📋 Planned | Performance optimization, difficulty calibration, user testing |
+| 1. Foundation | 1-2 | ✅ **COMPLETE** | PostgreSQL schema, API endpoints, JWT auth |
+| 2. Intelligence | 3-4 | ✅ **COMPLETE** | Vector DB + embeddings, graph relationships, semantic search |
+| 3. Frontend | 5-6 | ✅ **COMPLETE** | Next.js 14 migration, all pages, custom branding |
+| 4. Training | 7-8 | 📋 **NEXT** | Spaced repetition, adaptive difficulty, weakness detection |
+| 5. AI Enhancement | 9-10 | 📋 Planned | Code assessment, question generation, AI hints |
+| 6. Polish | 11-12 | 📋 Planned | Performance optimization, difficulty calibration, deployment |
 
-**Current Focus**: Phase 1 complete. Ready to begin Phase 2 (Intelligence layer) or continue enhancing Phase 5 (Frontend features).
+**Current Focus**: Phase 3 complete. Ready to begin Phase 4 (Enhanced Training features).

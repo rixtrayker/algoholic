@@ -1,357 +1,248 @@
 # API-Frontend Alignment Report
 
-This document details the corrections made to align the frontend API client with the Postman collection and backend API.
+This document details the alignment between the frontend API clients and the backend API.
 
-## Summary of Changes
+## Current Status: ✅ Fully Aligned
 
-All frontend API endpoints have been updated to match the Postman collection (22 endpoints total).
+All frontend API endpoints match the backend routes (44+ endpoints total).
 
-## Corrections Made
+---
 
-### 1. Authentication API ✅
+## Frontend Implementations
 
-**GET /auth/me**
-- **Before**: Expected `data.user` wrapper
-- **After**: Returns user object directly
-- **Location**: `frontend/src/lib/api.ts:104-107`
+### 1. Next.js Web Application (Primary) ✅
 
-```typescript
-// Before
-return data.user as User;
+**Location**: `web/src/lib/api.ts`
 
-// After
-return data as User;
-```
-
-### 2. User API ✅
-
-**GET /users/stats**
-- **Before**: `/users/me/stats`
-- **After**: `/users/stats`
-- **Impact**: Dashboard component
-
-**Added New Endpoints**:
-- `GET /users/progress?days=30` - Get progress history
-- `GET /users/attempts?limit=50` - Get attempt history
+Complete API client with:
+- All 44+ endpoints implemented
+- Proper TypeScript types
+- JWT token handling
+- Error interceptors
 
 ```typescript
-getStats: async () => {
-  const { data } = await api.get('/users/stats'); // Fixed path
-  return data as UserStats;
-},
-
-getProgress: async (days = 30) => {
-  const { data } = await api.get('/users/progress', { params: { days } });
-  return data;
-},
-
-getAttempts: async (limit = 50) => {
-  const { data } = await api.get('/users/attempts', { params: { limit } });
-  return data;
-},
+// API modules
+authAPI          // 4 endpoints
+problemsAPI      // 5 endpoints
+questionsAPI     // 6 endpoints
+userAPI          // 9 endpoints
+trainingPlansAPI // 8 endpoints
+topicsAPI        // 4 endpoints
+listsAPI         // 7 endpoints
+activityAPI      // 4 endpoints
+searchAPI        // 2 endpoints
+graphAPI         // 1 endpoint
+intelligenceAPI  // 1 endpoint
 ```
 
-### 3. Training Plans API ✅
+### 2. Legacy React Frontend ✅
 
-**Endpoint Prefix Change**
-- **Before**: `/training-plans/*`
-- **After**: `/plans/*`
-- **Impact**: All training plan components
+**Location**: `frontend/src/lib/api.ts`
 
-**Updated Endpoints**:
-- `GET /plans` (was `/training-plans`)
-- `GET /plans/:id` (was `/training-plans/:id`)
-- `POST /plans/:id/enroll` (new)
-- `PUT /plans/:id/progress` (new)
-- `GET /users/plans` (added)
+Maintained for backward compatibility with corrected endpoints:
+- Training plans use `/training-plans` (fixed from `/plans`)
+- Questions use `user_answer` in submit body
+- Hint endpoint integrated
 
-**Added Methods**:
-- `enrollInPlan(planId)` - Enroll user in a plan
-- `updatePlanProgress(planId, progressData)` - Update plan progress
-- `getMyPlans()` - Get user's enrolled plans
+---
+
+## Endpoint Mapping
+
+### Authentication (4 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| POST /api/auth/register | ✅ | ✅ | Aligned |
+| POST /api/auth/login | ✅ | ✅ | Aligned |
+| GET /api/auth/me | ✅ | ✅ | Aligned |
+| POST /api/auth/change-password | ✅ | - | Aligned |
+
+### Problems (5 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/problems | ✅ | ✅ | Aligned |
+| GET /api/problems/:id | ✅ | ✅ | Aligned |
+| GET /api/problems/slug/:slug | ✅ | - | Aligned |
+| GET /api/problems/:id/topics | ✅ | ✅ | Aligned |
+| GET /api/problems/:id/similar | ✅ | - | Aligned |
+
+### Questions (6 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/questions | ✅ | ✅ | Aligned |
+| GET /api/questions/random | ✅ | ✅ | Aligned |
+| GET /api/questions/:id | ✅ | ✅ | Aligned |
+| GET /api/questions/:id/hint | ✅ | ✅ | Aligned |
+| POST /api/questions/:id/answer | ✅ | ✅ | Aligned |
+| GET /api/questions/:id/attempts | ✅ | ✅ | Aligned |
+
+### Users (9 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/users/me/stats | ✅ | ✅ | Aligned |
+| GET /api/users/me/weaknesses | ✅ | ✅ | Aligned |
+| GET /api/users/me/recommendations | ✅ | - | Aligned |
+| GET /api/users/me/review-queue | ✅ | - | Aligned |
+| GET /api/users/me/skills | ✅ | ✅ | Aligned |
+| GET /api/users/me/skills/:topicId | ✅ | - | Aligned |
+| GET /api/users/me/preferences | ✅ | - | Aligned |
+| PUT /api/users/me/preferences | ✅ | - | Aligned |
+| GET /api/users/me/attempts | ✅ | ✅ | Aligned |
+
+### Training Plans (8 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| POST /api/training-plans | ✅ | ✅ | Aligned |
+| GET /api/training-plans | ✅ | ✅ | Aligned |
+| GET /api/training-plans/:id | ✅ | ✅ | Aligned |
+| GET /api/training-plans/:id/next | ✅ | ✅ | Aligned |
+| GET /api/training-plans/:id/items | ✅ | ✅ | Aligned |
+| GET /api/training-plans/:id/today | ✅ | ✅ | Aligned |
+| POST /api/training-plans/:id/items/:itemId/complete | ✅ | ✅ | Aligned |
+| POST /api/training-plans/:id/pause | ✅ | ✅ | Aligned |
+| POST /api/training-plans/:id/resume | ✅ | ✅ | Aligned |
+| DELETE /api/training-plans/:id | ✅ | ✅ | Aligned |
+
+### Topics (4 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/topics | ✅ | ✅ | Aligned |
+| GET /api/topics/:id | ✅ | - | Aligned |
+| GET /api/topics/:id/prerequisites | ✅ | - | Aligned |
+| GET /api/topics/:userId/performance/:topicId | ✅ | ✅ | Aligned |
+
+### Lists (7 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/lists | ✅ | ✅ | Aligned |
+| POST /api/lists | ✅ | ✅ | Aligned |
+| GET /api/lists/:id | ✅ | ✅ | Aligned |
+| PUT /api/lists/:id | ✅ | ✅ | Aligned |
+| DELETE /api/lists/:id | ✅ | ✅ | Aligned |
+| POST /api/lists/:id/problems | ✅ | ✅ | Aligned |
+| DELETE /api/lists/:id/problems/:problemId | ✅ | ✅ | Aligned |
+
+### Activity (4 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/activity/chart | ✅ | ✅ | Aligned |
+| GET /api/activity/stats | ✅ | ✅ | Aligned |
+| GET /api/activity/history | ✅ | ✅ | Aligned |
+| POST /api/activity/record | ✅ | ✅ | Aligned |
+
+### Search (2 endpoints)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/search/problems | ✅ | ✅ | Aligned |
+| GET /api/search/questions | ✅ | - | Aligned |
+
+### Graph (1 endpoint)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/graph/learning-path | ✅ | - | Aligned |
+
+### Intelligence (1 endpoint)
+| Backend Route | Next.js | Legacy | Status |
+|--------------|---------|--------|--------|
+| GET /api/intelligence/status | ✅ | - | Aligned |
+
+---
+
+## Request/Response Formats
+
+### Submit Answer
+```typescript
+// Request
+POST /api/questions/:id/answer
+{
+  "user_answer": { "answer": "A" },
+  "time_taken_seconds": 45,
+  "hints_used": 1,
+  "confidence_level": 3,
+  "training_plan_id": null
+}
+
+// Response
+{
+  "is_correct": true,
+  "correct_answer": { "answer": "A" },
+  "explanation": "...",
+  "attempt_id": 123,
+  "points_earned": 250
+}
+```
+
+### Training Plans List
+```typescript
+// Response
+{
+  "plans": [...],
+  "count": 3
+}
+```
+
+---
+
+## Type Definitions
+
+All types are defined in `web/src/lib/api.ts`:
 
 ```typescript
-// Before
-getPlans: async () => {
-  const { data } = await api.get('/training-plans');
-  return data.plans as TrainingPlan[];
-},
-
-// After
-getPlans: async () => {
-  const { data } = await api.get('/plans');
-  return data as TrainingPlan[];
-},
-
-getMyPlans: async () => {
-  const { data } = await api.get('/users/plans');
-  return data as TrainingPlan[];
-},
-
-enrollInPlan: async (planId: number) => {
-  const { data } = await api.post(`/plans/${planId}/enroll`);
-  return data;
-},
+interface User { ... }
+interface Problem { ... }
+interface Question { ... }
+interface UserStats { ... }
+interface TrainingPlan { ... }
+interface Topic { ... }
+interface UserList { ... }
+interface WeakTopic { ... }
+interface Recommendation { ... }
+interface ReviewQueueItem { ... }
 ```
 
-### 4. Questions API ✅
+---
 
-**POST /questions/:id/answer**
-- **Before**: Body used `user_answer` field
-- **After**: Body uses `answer` field
-- **Removed**: `hints_used`, `training_plan_id` parameters (not in Postman spec)
+## Authentication Flow
+
+1. User logs in via `/auth/login`
+2. JWT token stored in `localStorage`
+3. Token added to all requests via axios interceptor
+4. 401 responses trigger redirect to login
 
 ```typescript
-// Before
-submitAnswer: async (
-  questionId: number,
-  userAnswer: any,
-  timeTaken: number,
-  hintsUsed = 0,
-  trainingPlanId?: number
-) => {
-  const { data } = await api.post(`/questions/${questionId}/answer`, {
-    user_answer: userAnswer,
-    time_taken_seconds: timeTaken,
-    hints_used: hintsUsed,
-    training_plan_id: trainingPlanId,
-  });
-  return data;
-},
-
-// After
-submitAnswer: async (
-  questionId: number,
-  userAnswer: any,
-  timeTaken: number
-) => {
-  const { data } = await api.post(`/questions/${questionId}/answer`, {
-    answer: userAnswer,
-    time_taken_seconds: timeTaken,
-  });
-  return data;
-},
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 ```
 
-**Added New Endpoint**:
-- `GET /questions/:id/hint` - Request a hint
+---
 
-```typescript
-getHint: async (questionId: number) => {
-  const { data } = await api.get(`/questions/${questionId}/hint`);
-  return data;
-},
-```
-
-### 5. Problems API ✅
-
-**Added New Endpoint**:
-- `GET /problems/:id/questions` - Get all questions for a problem
-
-**Enhanced Search**:
-- Added support for `difficulty` and `topic` filters
-- More flexible parameter handling
-
-```typescript
-getProblemQuestions: async (id: number) => {
-  const { data } = await api.get(`/problems/${id}/questions`);
-  return data;
-},
-
-searchProblems: async (query: string, filters?: {
-  difficulty?: string;
-  topic?: string;
-  limit?: number;
-}) => {
-  const params = { q: query, ...filters };
-  const { data } = await api.get('/problems/search', { params });
-  return data;
-},
-```
-
-### 6. Topics API ✅ (NEW)
-
-**Added Complete Topics API**:
-- `GET /topics` - List all topics
-- `GET /users/topics/:id/performance` - Get user's performance for a topic
-
-```typescript
-export const topicsAPI = {
-  getTopics: async () => {
-    const { data } = await api.get('/topics');
-    return data;
-  },
-
-  getTopicPerformance: async (topicId: number) => {
-    const { data } = await api.get(`/users/topics/${topicId}/performance`);
-    return data;
-  },
-};
-```
-
-## Complete Endpoint Mapping
-
-### Authentication (3 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| POST /api/auth/register | POST /auth/register | ✅ |
-| POST /api/auth/login | POST /auth/login | ✅ |
-| GET /api/auth/me | GET /auth/me | ✅ Fixed response handling |
-
-### Questions (4 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /api/questions/random | GET /questions/random | ✅ |
-| GET /api/questions/random?filters | GET /questions/random | ✅ |
-| POST /api/questions/:id/answer | POST /questions/:id/answer | ✅ Fixed body params |
-| GET /api/questions/:id/hint | GET /questions/:id/hint | ✅ Added |
-
-### Problems (4 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /api/problems | GET /problems | ✅ |
-| GET /api/problems/:id | GET /problems/:id | ✅ |
-| GET /api/problems/:id/questions | GET /problems/:id/questions | ✅ Added |
-| GET /api/problems/search | GET /problems/search | ✅ Enhanced |
-
-### User Stats & Progress (3 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /api/users/stats | GET /users/stats | ✅ Fixed path |
-| GET /api/users/progress | GET /users/progress | ✅ Added |
-| GET /api/users/attempts | GET /users/attempts | ✅ Added |
-
-### Training Plans (5 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /api/plans | GET /plans | ✅ Fixed prefix |
-| GET /api/plans/:id | GET /plans/:id | ✅ Fixed prefix |
-| POST /api/plans/:id/enroll | POST /plans/:id/enroll | ✅ Added |
-| GET /api/users/plans | GET /users/plans | ✅ Added |
-| PUT /api/plans/:id/progress | PUT /plans/:id/progress | ✅ Added |
-
-### Topics (2 endpoints)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /api/topics | GET /topics | ✅ Added |
-| GET /api/users/topics/:id/performance | GET /users/topics/:id/performance | ✅ Added |
-
-### Health Check (1 endpoint)
-| Postman | Frontend | Status |
-|---------|----------|--------|
-| GET /health | - | ℹ️ Not needed in frontend |
-
-## Impact on Frontend Components
-
-### Components Requiring Updates
-
-1. **Dashboard.tsx** (src/pages/Dashboard.tsx)
-   - ✅ Already using `userAPI.getStats()` which is now fixed
-
-2. **Practice.tsx** (src/pages/Practice.tsx)
-   - ⚠️ May need update for `submitAnswer` signature change
-   - Old: `submitAnswer(id, answer, time, hints, planId)`
-   - New: `submitAnswer(id, answer, time)`
-
-3. **TrainingPlans.tsx** (src/pages/TrainingPlans.tsx)
-   - ⚠️ Update to use `trainingPlansAPI.getMyPlans()` instead of filtering
-   - ⚠️ Update enrollment flow to use `enrollInPlan()`
-
-4. **Problems.tsx** (src/pages/Problems.tsx)
-   - ⚠️ Can now use enhanced search filters
-   - ✅ Already compatible with current implementation
-
-## Testing Recommendations
-
-### Manual Testing Checklist
-
-- [ ] Test user registration flow
-- [ ] Test login and token storage
-- [ ] Verify dashboard stats display correctly
-- [ ] Test question fetching and answer submission
-- [ ] Test problem browsing and search
-- [ ] Test training plan enrollment
-- [ ] Verify topics list loads
-
-### Component-Specific Tests
-
-```bash
-cd frontend
-npm test src/pages/__tests__/Dashboard.test.tsx
-npm test src/pages/__tests__/Practice.test.tsx
-npm test src/pages/__tests__/Login.test.tsx
-```
+## Testing
 
 ### Newman API Tests
-
 ```bash
-cd postman
-./run-tests.sh
+cd postman && ./run-tests.sh
 ```
 
-## Migration Guide for Components
-
-### Updating Practice Component
-
-```typescript
-// Before
-const handleSubmit = async () => {
-  await questionsAPI.submitAnswer(
-    questionId,
-    answer,
-    timeElapsed,
-    hintsUsed,
-    trainingPlanId
-  );
-};
-
-// After
-const handleSubmit = async () => {
-  await questionsAPI.submitAnswer(
-    questionId,
-    answer,
-    timeElapsed
-  );
-};
+### Next.js Build
+```bash
+cd web && npm run build
 ```
 
-### Updating Training Plans Component
+---
 
-```typescript
-// Before
-const plans = await trainingPlansAPI.getPlans();
-const myPlans = plans.filter(p => p.isEnrolled);
+## Files
 
-// After
-const myPlans = await trainingPlansAPI.getMyPlans();
+| File | Purpose |
+|------|---------|
+| `web/src/lib/api.ts` | Next.js API client (primary) |
+| `frontend/src/lib/api.ts` | Legacy API client |
+| `backend/routes/routes.go` | Backend route definitions |
+| `postman/algoholic-api.postman_collection.json` | API specification |
 
-// Enrollment
-await trainingPlansAPI.enrollInPlan(planId);
-```
+---
 
-## Validation
-
-All changes have been validated against:
-1. ✅ Postman collection (22 endpoints)
-2. ✅ Backend routes (Go Fiber handlers)
-3. ✅ Frontend test mocks
-4. ✅ TypeScript type definitions
-
-## Next Steps
-
-1. **Update Practice Component** - Adjust `submitAnswer` call signature
-2. **Update Training Plans Component** - Use new enrollment endpoints
-3. **Run Full Test Suite** - Verify all frontend tests pass
-4. **Integration Testing** - Test against live backend
-5. **Update API Documentation** - Reflect changes in developer docs
-
-## Files Modified
-
-- `frontend/src/lib/api.ts` - Main API client (all changes)
-- Documentation created: `docs/api-frontend-alignment.md`
-
-## Related Documents
-
-- `postman/README.md` - Postman collection usage
-- `postman/algoholic-api.postman_collection.json` - API specification
-- `backend/routes/routes.go` - Backend route definitions
+**Last Updated**: 2026-02-22
