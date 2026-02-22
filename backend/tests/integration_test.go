@@ -167,7 +167,7 @@ func TestGetProblems(t *testing.T) {
 		Slug:            "test-problem",
 		Description:     "This is a test problem",
 		DifficultyScore: 50.0,
-		Examples:        models.JSONB{"example": "test"},
+		Examples:        models.JSONBArray{map[string]interface{}{"input": "test", "output": "result"}},
 	}
 	testDB.Create(testProblem)
 

@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -11,6 +12,9 @@ import (
 
 // JSONB is a custom type for PostgreSQL JSONB columns
 type JSONB map[string]interface{}
+
+// JSONBArray is a custom type for PostgreSQL JSONB columns that store arrays
+type JSONBArray []interface{}
 
 func (j JSONB) Value() (driver.Value, error) {
 	if j == nil {
@@ -31,6 +35,25 @@ func (j *JSONB) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, j)
 }
 
+func (j JSONBArray) Value() (driver.Value, error) {
+	if j == nil {
+		return nil, nil
+	}
+	return json.Marshal(j)
+}
+
+func (j *JSONBArray) Scan(value interface{}) error {
+	if value == nil {
+		*j = nil
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal JSONBArray value")
+	}
+	return json.Unmarshal(bytes, j)
+}
+
 // StringArray is a custom type for PostgreSQL text[] columns
 type StringArray []string
 
@@ -38,7 +61,14 @@ func (a StringArray) Value() (driver.Value, error) {
 	if a == nil {
 		return nil, nil
 	}
-	return json.Marshal(a)
+	if len(a) == 0 {
+		return "{}", nil
+	}
+	escaped := make([]string, len(a))
+	for i, s := range a {
+		escaped[i] = `"` + strings.ReplaceAll(s, `"`, `\"`) + `"`
+	}
+	return "{" + strings.Join(escaped, ",") + "}", nil
 }
 
 func (a *StringArray) Scan(value interface{}) error {
@@ -46,11 +76,57 @@ func (a *StringArray) Scan(value interface{}) error {
 		*a = nil
 		return nil
 	}
-	bytes, ok := value.([]byte)
-	if !ok {
+	switch v := value.(type) {
+	case []byte:
+		return a.parsePostgresArray(string(v))
+	case string:
+		return a.parsePostgresArray(v)
+	default:
 		return errors.New("failed to unmarshal StringArray value")
 	}
-	return json.Unmarshal(bytes, a)
+}
+
+func (a *StringArray) parsePostgresArray(s string) error {
+	if s == "{}" || s == "" {
+		*a = []string{}
+		return nil
+	}
+	s = strings.Trim(s, "{}")
+	if s == "" {
+		*a = []string{}
+		return nil
+	}
+	var result []string
+	var current strings.Builder
+	inQuote := false
+	escaped := false
+	for _, r := range s {
+		if escaped {
+			current.WriteRune(r)
+			escaped = false
+			continue
+		}
+		switch r {
+		case '\\':
+			escaped = true
+		case '"':
+			inQuote = !inQuote
+		case ',':
+			if !inQuote {
+				result = append(result, current.String())
+				current.Reset()
+			} else {
+				current.WriteRune(r)
+			}
+		default:
+			current.WriteRune(r)
+		}
+	}
+	if current.Len() > 0 {
+		result = append(result, current.String())
+	}
+	*a = result
+	return nil
 }
 
 // User represents a platform user
@@ -78,7 +154,7 @@ type Problem struct {
 	Slug               string      `json:"slug" gorm:"column:slug;uniqueIndex;not null"`
 	Description        string      `json:"description" gorm:"column:description;not null"`
 	Constraints        StringArray `json:"constraints,omitempty" gorm:"column:constraints;type:text[]"`
-	Examples           JSONB       `json:"examples" gorm:"column:examples;type:jsonb;not null"`
+	Examples           JSONBArray  `json:"examples" gorm:"column:examples;type:jsonb;not null"`
 	Hints              StringArray `json:"hints,omitempty" gorm:"column:hints;type:text[]"`
 	DifficultyScore    float64     `json:"difficulty_score" gorm:"column:difficulty_score;not null;check:difficulty_score >= 0 AND difficulty_score <= 100"`
 	OfficialDifficulty *string     `json:"official_difficulty,omitempty" gorm:"column:official_difficulty"`
