@@ -24,9 +24,11 @@ api.interceptors.response.use(
   (error) => {
     if (typeof window !== 'undefined' && error.response?.status === 401) {
       const requestUrl = error.config?.url || '';
-      if (!requestUrl.includes('/auth/')) {
+      if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/register')) {
         localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
