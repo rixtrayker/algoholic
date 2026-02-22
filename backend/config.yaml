@@ -82,7 +82,7 @@ rag:
   reranking_enabled: false
 
 auth:
-  enabled: false
+  enabled: true
   jwt_secret: "change-me-in-production"
   jwt_expiry: 24        # hours
   refresh_expiry: 168   # hours (7 days)
