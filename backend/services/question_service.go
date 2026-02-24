@@ -14,11 +14,17 @@ type QuestionService struct {
 	db               *gorm.DB
 	userService      *UserService
 	spacedRepService *SpacedRepetitionService
+	eventService     *EventService
 }
 
 // NewQuestionService creates a new question service
 func NewQuestionService(db *gorm.DB, userService *UserService, spacedRepService *SpacedRepetitionService) *QuestionService {
 	return &QuestionService{db: db, userService: userService, spacedRepService: spacedRepService}
+}
+
+// SetEventService sets the event bus (optional; avoids circular init)
+func (s *QuestionService) SetEventService(es *EventService) {
+	s.eventService = es
 }
 
 // GetQuestions retrieves questions with filters
@@ -90,10 +96,10 @@ func (s *QuestionService) GetRandomQuestion(questionType string, minDifficulty, 
 
 // AnswerRequest represents a question answer submission
 type AnswerRequest struct {
-	QuestionID     int                    `json:"question_id"`
-	UserAnswer     map[string]interface{} `json:"user_answer"`
-	TimeTaken      int                    `json:"time_taken_seconds"`
-	HintsUsed      int                    `json:"hints_used"`
+	QuestionID     int                    `json:"question_id" validate:"required,gt=0"`
+	UserAnswer     map[string]interface{} `json:"user_answer" validate:"required"`
+	TimeTaken      int                    `json:"time_taken_seconds" validate:"required,gte=0"`
+	HintsUsed      int                    `json:"hints_used" validate:"gte=0,lte=3"`
 	Confidence     *int                   `json:"confidence_level,omitempty"`
 	TrainingPlanID *int                   `json:"training_plan_id,omitempty"`
 }
@@ -212,6 +218,21 @@ func (s *QuestionService) SubmitAnswer(userID int, req AnswerRequest) (*AnswerRe
 				response.WrongAnswerExplanation = fmt.Sprintf("%v", explanation)
 			}
 		}
+	}
+
+	// Publish answer event for downstream subscribers (gamification, analytics, etc.)
+	if s.eventService != nil {
+		s.eventService.Publish(Event{
+			Type:   EventAnswerSubmitted,
+			UserID: userID,
+			Payload: map[string]interface{}{
+				"question_id":   req.QuestionID,
+				"is_correct":    isCorrect,
+				"points_earned": points,
+				"time_taken":    req.TimeTaken,
+				"attempt_id":    response.AttemptID,
+			},
+		})
 	}
 
 	return response, nil

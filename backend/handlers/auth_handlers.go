@@ -33,13 +33,29 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required,min=8"`
 }
 
-// Register handles user registration
-func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var req RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
+// validateRequest parses the body and validates the struct, returning standardized errors
+func validateRequest(c *fiber.Ctx, req interface{}) error {
+	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
+	}
+
+	if errs := middleware.ValidateStruct(req); len(errs) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": errs,
+		})
+	}
+
+	return nil
+}
+
+// Register handles user registration
+func (h *AuthHandler) Register(c *fiber.Ctx) error {
+	var req RegisterRequest
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	user, err := h.authService.Register(req.Username, req.Email, req.Password)
@@ -76,10 +92,8 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // Login handles user login, returns access + refresh tokens
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req LoginRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	tokenPair, user, err := h.authService.Login(req.Username, req.Password)
@@ -139,10 +153,8 @@ func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
 	}
 
 	var req ChangePasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	err := h.authService.UpdatePassword(userID, req.OldPassword, req.NewPassword)
@@ -164,22 +176,14 @@ func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
 
 // ForgotPasswordRequest represents a forgot password request
 type ForgotPasswordRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 // ForgotPassword initiates password reset flow
 func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 	var req ForgotPasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
-	if req.Email == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Email is required",
-		})
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	token, err := h.authService.ForgotPassword(req.Email)
@@ -204,29 +208,15 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 
 // ResetPasswordRequest represents a password reset request
 type ResetPasswordRequest struct {
-	Token       string `json:"token"`
-	NewPassword string `json:"new_password"`
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
 }
 
 // ResetPassword completes the password reset flow
 func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	var req ResetPasswordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
-	if req.Token == "" || req.NewPassword == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Token and new password are required",
-		})
-	}
-
-	if len(req.NewPassword) < 8 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Password must be at least 8 characters",
-		})
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	err := h.authService.ResetPassword(req.Token, req.NewPassword)
@@ -248,22 +238,14 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 
 // RefreshTokenRequest represents a token refresh request
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 // RefreshToken issues a new access token from a refresh token
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	var req RefreshTokenRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
-	if req.RefreshToken == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Refresh token is required",
-		})
+	if err := validateRequest(c, &req); err != nil {
+		return err
 	}
 
 	tokenPair, err := h.authService.RefreshToken(req.RefreshToken)

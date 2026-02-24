@@ -24,6 +24,10 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	questionService := services.NewQuestionService(db, userService, spacedRepService)
 	trainingPlanService := services.NewTrainingPlanService(db, questionService, userService)
 
+	// Event system
+	eventService := services.NewEventService()
+	questionService.SetEventService(eventService)
+
 	// Phase 2: Intelligence services
 	embedder := services.NewEmbeddingService(cfg.Ollama.URL, cfg.Ollama.EmbeddingModel)
 	vectorService := services.NewVectorService(cfg.ChromaDB.URL, embedder)

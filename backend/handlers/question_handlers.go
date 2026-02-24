@@ -103,6 +103,13 @@ func (h *QuestionHandler) SubmitAnswer(c *fiber.Ctx) error {
 
 	req.QuestionID = id
 
+	if errs := middleware.ValidateStruct(&req); len(errs) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": errs,
+		})
+	}
+
 	response, err := h.questionService.SubmitAnswer(userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

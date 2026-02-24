@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -18,6 +19,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/yourusername/algoholic/config"
+	appmiddleware "github.com/yourusername/algoholic/middleware"
 	"github.com/yourusername/algoholic/models"
 	"github.com/yourusername/algoholic/routes"
 )
@@ -68,13 +70,13 @@ func initDB() error {
 
 	// Auto-migrate (only in development)
 	if cfg.IsDevelopment() && dbCfg.AutoMigrate {
-		log.Println("Running auto-migration (development mode)")
+		slog.Info("running auto-migration (development mode)")
 		if err := models.AutoMigrate(DB); err != nil {
 			return fmt.Errorf("failed to auto-migrate: %w", err)
 		}
 	}
 
-	log.Println("Database connected successfully")
+	slog.Info("database connected successfully")
 	return nil
 }
 
@@ -89,14 +91,28 @@ func main() {
 	var err error
 	cfg, err = config.Load(configPath)
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	log.Printf("Starting %s v%s (%s mode)", cfg.App.Name, cfg.App.Version, cfg.App.Environment)
+	// Configure structured logging
+	logLevel := slog.LevelInfo
+	if cfg.IsDevelopment() {
+		logLevel = slog.LevelDebug
+	}
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: logLevel,
+	})))
+
+	slog.Info("starting server",
+		slog.String("app", cfg.App.Name),
+		slog.String("version", cfg.App.Version),
+		slog.String("environment", cfg.App.Environment),
+	)
 
 	// Initialize database
 	if err := initDB(); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		slog.Error("failed to initialize database", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Create Fiber app
@@ -111,10 +127,14 @@ func main() {
 				code = e.Code
 			}
 
-			// Log error in development
-			if cfg.IsDevelopment() {
-				log.Printf("Error: %v", err)
-			}
+			requestID := appmiddleware.GetRequestID(c)
+			slog.Error("request error",
+				slog.String("request_id", requestID),
+				slog.String("method", c.Method()),
+				slog.String("path", c.Path()),
+				slog.Int("status", code),
+				slog.String("error", err.Error()),
+			)
 
 			return c.Status(code).JSON(fiber.Map{
 				"error": err.Error(),
@@ -125,6 +145,10 @@ func main() {
 	// Middleware
 	app.Use(recover.New())
 
+	// Structured request logging with request IDs (all environments)
+	app.Use(appmiddleware.RequestLogger())
+
+	// Additional human-readable logger in development
 	if cfg.IsDevelopment() {
 		app.Use(logger.New(logger.Config{
 			Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
@@ -146,10 +170,10 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-		log.Printf("Server listening on %s", addr)
-		log.Printf("API Documentation: http://localhost:%d/api", cfg.Server.Port)
+		slog.Info("server listening", slog.String("address", addr))
 		if err := app.Listen(addr); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+			slog.Error("failed to start server", slog.String("error", err.Error()))
+			os.Exit(1)
 		}
 	}()
 
@@ -158,11 +182,12 @@ func main() {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	slog.Info("shutting down server...")
 
 	// Shutdown server first to drain in-flight requests
 	if err := app.ShutdownWithTimeout(time.Duration(cfg.Server.ShutdownTimeout) * time.Second); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		slog.Error("server forced to shutdown", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	// Then close database connections
@@ -170,5 +195,5 @@ func main() {
 		sqlDB.Close()
 	}
 
-	log.Println("Server exited successfully")
+	slog.Info("server exited successfully")
 }

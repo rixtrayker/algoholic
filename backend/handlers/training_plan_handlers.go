@@ -33,6 +33,13 @@ func (h *TrainingPlanHandler) CreateTrainingPlan(c *fiber.Ctx) error {
 		})
 	}
 
+	if errs := middleware.ValidateStruct(&req); len(errs) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   "Validation failed",
+			"details": errs,
+		})
+	}
+
 	plan, err := h.trainingPlanService.CreateTrainingPlan(userID, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

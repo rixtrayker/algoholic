@@ -28,15 +28,15 @@ func NewTrainingPlanService(db *gorm.DB, questionService *QuestionService, userS
 
 // CreatePlanRequest represents a training plan creation request
 type CreatePlanRequest struct {
-	Name               string   `json:"name"`
+	Name               string   `json:"name" validate:"required,min=1,max=200"`
 	Description        string   `json:"description"`
-	PlanType           string   `json:"plan_type"` // preset, custom, ai_generated
+	PlanType           string   `json:"plan_type" validate:"oneof=preset custom ai_generated"` // preset, custom, ai_generated
 	TargetTopics       []int    `json:"target_topics"`
 	TargetPatterns     []string `json:"target_patterns"`
-	DurationDays       int      `json:"duration_days"`
-	QuestionsPerDay    int      `json:"questions_per_day"`
-	DifficultyMin      float64  `json:"difficulty_min"`
-	DifficultyMax      float64  `json:"difficulty_max"`
+	DurationDays       int      `json:"duration_days" validate:"required,gte=1,lte=365"`
+	QuestionsPerDay    int      `json:"questions_per_day" validate:"required,gte=1,lte=50"`
+	DifficultyMin      float64  `json:"difficulty_min" validate:"gte=0,lte=100"`
+	DifficultyMax      float64  `json:"difficulty_max" validate:"gte=0,lte=100"`
 	AdaptiveDifficulty bool     `json:"adaptive_difficulty"`
 }
 
