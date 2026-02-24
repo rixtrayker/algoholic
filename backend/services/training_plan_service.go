@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"math"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -38,49 +40,53 @@ type CreatePlanRequest struct {
 	AdaptiveDifficulty bool     `json:"adaptive_difficulty"`
 }
 
-// CreateTrainingPlan creates a new training plan
+// CreateTrainingPlan creates a new training plan within a transaction
 func (s *TrainingPlanService) CreateTrainingPlan(userID int, req CreatePlanRequest) (*models.TrainingPlan, error) {
-	// Create training plan
-	plan := &models.TrainingPlan{
-		UserID:             userID,
-		Name:               req.Name,
-		Description:        &req.Description,
-		PlanType:           &req.PlanType,
-		DurationDays:       &req.DurationDays,
-		QuestionsPerDay:    req.QuestionsPerDay,
-		AdaptiveDifficulty: req.AdaptiveDifficulty,
-		Status:             "active",
-		StartDate:          time.Now(),
-	}
+	var plan *models.TrainingPlan
 
-	// Convert target topics and patterns
-	if len(req.TargetTopics) > 0 {
-		topicsArray := make(models.StringArray, len(req.TargetTopics))
-		for i, topic := range req.TargetTopics {
-			topicsArray[i] = string(rune(topic))
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		plan = &models.TrainingPlan{
+			UserID:             userID,
+			Name:               req.Name,
+			Description:        &req.Description,
+			PlanType:           &req.PlanType,
+			DurationDays:       &req.DurationDays,
+			QuestionsPerDay:    req.QuestionsPerDay,
+			AdaptiveDifficulty: req.AdaptiveDifficulty,
+			Status:             "active",
+			StartDate:          time.Now(),
 		}
-		plan.TargetTopics = topicsArray
-	}
 
-	if len(req.TargetPatterns) > 0 {
-		plan.TargetPatterns = models.StringArray(req.TargetPatterns)
-	}
+		// Convert target topics and patterns
+		if len(req.TargetTopics) > 0 {
+			topicsArray := make(models.StringArray, len(req.TargetTopics))
+			for i, topic := range req.TargetTopics {
+				topicsArray[i] = strconv.Itoa(topic)
+			}
+			plan.TargetTopics = topicsArray
+		}
 
-	// Save plan
-	if err := s.db.Create(plan).Error; err != nil {
-		return nil, err
-	}
+		if len(req.TargetPatterns) > 0 {
+			plan.TargetPatterns = models.StringArray(req.TargetPatterns)
+		}
 
-	// Generate plan items
-	if err := s.GeneratePlanItems(plan, req.DifficultyMin, req.DifficultyMax); err != nil {
-		return nil, err
-	}
+		if err := tx.Create(plan).Error; err != nil {
+			return err
+		}
 
-	return plan, nil
+		// Generate plan items within same transaction
+		if err := s.generatePlanItemsTx(tx, plan, req.DifficultyMin, req.DifficultyMax); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return plan, err
 }
 
-// GeneratePlanItems generates questions for a training plan
-func (s *TrainingPlanService) GeneratePlanItems(plan *models.TrainingPlan, minDiff, maxDiff float64) error {
+// generatePlanItemsTx generates questions for a training plan within a transaction
+func (s *TrainingPlanService) generatePlanItemsTx(tx *gorm.DB, plan *models.TrainingPlan, minDiff, maxDiff float64) error {
 	totalQuestions := plan.QuestionsPerDay * *plan.DurationDays
 	sequenceNumber := 1
 
@@ -109,7 +115,7 @@ func (s *TrainingPlanService) GeneratePlanItems(plan *models.TrainingPlan, minDi
 				IsCompleted:    false,
 			}
 
-			if err := s.db.Create(&item).Error; err != nil {
+			if err := tx.Create(&item).Error; err != nil {
 				return err
 			}
 
@@ -120,11 +126,18 @@ func (s *TrainingPlanService) GeneratePlanItems(plan *models.TrainingPlan, minDi
 	return nil
 }
 
-// GetUserPlans retrieves all training plans for a user
-func (s *TrainingPlanService) GetUserPlans(userID int) ([]models.TrainingPlan, error) {
+// GetUserPlans retrieves paginated training plans for a user
+func (s *TrainingPlanService) GetUserPlans(userID int, limit, offset int) ([]models.TrainingPlan, int64, error) {
+	var total int64
+	s.db.Model(&models.TrainingPlan{}).Where("user_id = ?", userID).Count(&total)
+
 	var plans []models.TrainingPlan
-	err := s.db.Where("user_id = ?", userID).Order("created_at DESC").Find(&plans).Error
-	return plans, err
+	err := s.db.Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&plans).Error
+	return plans, total, err
 }
 
 // GetPlanByID retrieves a training plan by ID
@@ -300,29 +313,50 @@ func (s *TrainingPlanService) AdaptPlanDifficulty(planID, userID int) error {
 
 	accuracy := float64(correctCount) / float64(len(recentAttempts))
 
-	// Adjust difficulty for upcoming questions
+	// Get current average difficulty of incomplete plan items
+	var avgDifficulty float64
+	s.db.Table("training_plan_items tpi").
+		Joins("JOIN questions q ON q.question_id = tpi.question_id").
+		Where("tpi.plan_id = ? AND tpi.is_completed = FALSE", planID).
+		Select("COALESCE(AVG(q.difficulty_score), 50)").
+		Scan(&avgDifficulty)
+
+	// Calculate target difficulty range
+	var targetMin, targetMax float64
 	if accuracy > 0.85 {
 		// User is doing well, increase difficulty
-		s.db.Exec(`
-			UPDATE training_plan_items
-			SET question_id = (
-				SELECT question_id FROM questions
-				WHERE difficulty_score BETWEEN difficulty_score + 5 AND difficulty_score + 15
-				ORDER BY RANDOM() LIMIT 1
-			)
-			WHERE plan_id = ? AND is_completed = FALSE
-		`, planID)
+		targetMin = avgDifficulty + 5
+		targetMax = math.Min(100, avgDifficulty+20)
 	} else if accuracy < 0.40 {
 		// User is struggling, decrease difficulty
-		s.db.Exec(`
-			UPDATE training_plan_items
-			SET question_id = (
-				SELECT question_id FROM questions
-				WHERE difficulty_score BETWEEN difficulty_score - 15 AND difficulty_score - 5
-				ORDER BY RANDOM() LIMIT 1
-			)
-			WHERE plan_id = ? AND is_completed = FALSE
-		`, planID)
+		targetMin = math.Max(0, avgDifficulty-20)
+		targetMax = math.Max(0, avgDifficulty-5)
+	} else {
+		return nil // Accuracy is in acceptable range, no adjustment needed
+	}
+
+	// Get incomplete item IDs
+	var incompleteItems []models.TrainingPlanItem
+	s.db.Where("plan_id = ? AND is_completed = FALSE", planID).Find(&incompleteItems)
+
+	// Find replacement questions in the target difficulty range
+	var replacementIDs []int
+	s.db.Table("questions").
+		Select("question_id").
+		Where("difficulty_score BETWEEN ? AND ?", targetMin, targetMax).
+		Where("question_id NOT IN (?)",
+			s.db.Table("training_plan_items").Select("question_id").Where("plan_id = ? AND question_id IS NOT NULL", planID)).
+		Order("RANDOM()").
+		Limit(len(incompleteItems)).
+		Pluck("question_id", &replacementIDs)
+
+	// Replace each incomplete item with a new question
+	for i, item := range incompleteItems {
+		if i < len(replacementIDs) {
+			s.db.Model(&models.TrainingPlanItem{}).
+				Where("item_id = ?", item.ItemID).
+				Update("question_id", replacementIDs[i])
+		}
 	}
 
 	return nil
@@ -350,17 +384,16 @@ func (s *TrainingPlanService) ResumePlan(planID, userID int) error {
 		Update("status", "active").Error
 }
 
-// DeletePlan deletes a training plan
+// DeletePlan deletes a training plan and its items within a transaction
 func (s *TrainingPlanService) DeletePlan(planID, userID int) error {
 	if _, err := s.GetPlanByID(planID, userID); err != nil {
 		return err
 	}
 
-	// Delete plan items first (cascade)
-	if err := s.db.Where("plan_id = ?", planID).Delete(&models.TrainingPlanItem{}).Error; err != nil {
-		return err
-	}
-
-	// Delete plan
-	return s.db.Delete(&models.TrainingPlan{}, planID).Error
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("plan_id = ?", planID).Delete(&models.TrainingPlanItem{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&models.TrainingPlan{}, planID).Error
+	})
 }

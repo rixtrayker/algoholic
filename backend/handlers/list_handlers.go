@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/yourusername/algoholic/services"
+	"github.com/yourusername/algoholic/utils"
 	"gorm.io/gorm"
 )
 
@@ -18,18 +19,19 @@ func NewListHandler(db *gorm.DB) *ListHandler {
 	}
 }
 
-// GetUserLists returns all lists for the authenticated user
+// GetUserLists returns paginated lists for the authenticated user
 func (h *ListHandler) GetUserLists(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
+	pagination := utils.ParsePagination(c)
 
-	lists, err := h.listService.GetUserLists(userID)
+	lists, total, err := h.listService.GetUserLists(userID, pagination.PageSize, pagination.Offset())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch lists",
 		})
 	}
 
-	return c.JSON(lists)
+	return c.JSON(utils.NewPaginatedResponse(lists, total, pagination))
 }
 
 // GetList returns a specific list by ID

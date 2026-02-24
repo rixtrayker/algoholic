@@ -11,12 +11,14 @@ import (
 
 // QuestionService handles question-related operations
 type QuestionService struct {
-	db *gorm.DB
+	db               *gorm.DB
+	userService      *UserService
+	spacedRepService *SpacedRepetitionService
 }
 
 // NewQuestionService creates a new question service
-func NewQuestionService(db *gorm.DB) *QuestionService {
-	return &QuestionService{db: db}
+func NewQuestionService(db *gorm.DB, userService *UserService, spacedRepService *SpacedRepetitionService) *QuestionService {
+	return &QuestionService{db: db, userService: userService, spacedRepService: spacedRepService}
 }
 
 // GetQuestions retrieves questions with filters
@@ -105,59 +107,102 @@ type AnswerResponse struct {
 	AttemptID              int                    `json:"attempt_id"`
 	PointsEarned           int                    `json:"points_earned"`
 	NewProficiencyLevel    float64                `json:"new_proficiency_level,omitempty"`
+	Warning                string                 `json:"warning,omitempty"`
 }
 
-// SubmitAnswer processes a question answer
+// SubmitAnswer processes a question answer within a database transaction
 func (s *QuestionService) SubmitAnswer(userID int, req AnswerRequest) (*AnswerResponse, error) {
-	// Get question
+	// Get question (read-only, outside transaction)
 	question, err := s.GetQuestionByID(req.QuestionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check if answer is correct
+	// Check if answer is correct (pure logic, no DB)
 	isCorrect := s.CheckAnswer(question, req.UserAnswer)
 
-	// Create user attempt record
-	userAnswerJSON, _ := json.Marshal(req.UserAnswer)
-	var userAnswerMap map[string]interface{}
-	json.Unmarshal(userAnswerJSON, &userAnswerMap)
+	// Calculate points (pure logic, no DB)
+	points := s.CalculatePoints(question, isCorrect, req.TimeTaken, req.HintsUsed)
 
-	attempt := models.UserAttempt{
-		UserID:           userID,
-		QuestionID:       &req.QuestionID,
-		UserAnswer:       userAnswerMap,
-		IsCorrect:        isCorrect,
-		TimeTakenSeconds: req.TimeTaken,
-		HintsUsed:        req.HintsUsed,
-		ConfidenceLevel:  req.Confidence,
-		TrainingPlanID:   req.TrainingPlanID,
-	}
+	var response *AnswerResponse
 
-	// Get attempt number for this user/question
-	var attemptCount int64
-	s.db.Model(&models.UserAttempt{}).
-		Where("user_id = ? AND question_id = ?", userID, req.QuestionID).
-		Count(&attemptCount)
-	attempt.AttemptNumber = int(attemptCount) + 1
+	// Wrap core DB writes in a transaction for atomicity
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		userAnswerJSON, _ := json.Marshal(req.UserAnswer)
+		var userAnswerMap map[string]interface{}
+		json.Unmarshal(userAnswerJSON, &userAnswerMap)
 
-	if err := s.db.Create(&attempt).Error; err != nil {
+		attempt := models.UserAttempt{
+			UserID:           userID,
+			QuestionID:       &req.QuestionID,
+			UserAnswer:       userAnswerMap,
+			IsCorrect:        isCorrect,
+			TimeTakenSeconds: req.TimeTaken,
+			HintsUsed:        req.HintsUsed,
+			ConfidenceLevel:  req.Confidence,
+			TrainingPlanID:   req.TrainingPlanID,
+		}
+
+		// Get attempt number
+		var attemptCount int64
+		tx.Model(&models.UserAttempt{}).
+			Where("user_id = ? AND question_id = ?", userID, req.QuestionID).
+			Count(&attemptCount)
+		attempt.AttemptNumber = int(attemptCount) + 1
+
+		if err := tx.Create(&attempt).Error; err != nil {
+			return err
+		}
+
+		// Update question stats atomically
+		updates := map[string]interface{}{
+			"total_attempts": gorm.Expr("total_attempts + 1"),
+		}
+		if isCorrect {
+			updates["correct_attempts"] = gorm.Expr("correct_attempts + 1")
+		}
+		if question.AverageTimeSeconds == nil {
+			updates["average_time_seconds"] = float64(req.TimeTaken)
+		} else {
+			newAvg := (*question.AverageTimeSeconds*float64(question.TotalAttempts) + float64(req.TimeTaken)) / float64(question.TotalAttempts+1)
+			updates["average_time_seconds"] = newAvg
+		}
+		if err := tx.Model(&models.Question{}).Where("question_id = ?", req.QuestionID).Updates(updates).Error; err != nil {
+			return err
+		}
+
+		response = &AnswerResponse{
+			IsCorrect:     isCorrect,
+			CorrectAnswer: question.CorrectAnswer,
+			Explanation:   question.Explanation,
+			AttemptID:     attempt.AttemptID,
+			PointsEarned:  points,
+		}
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	// Update question stats
-	s.UpdateQuestionStats(req.QuestionID, isCorrect, req.TimeTaken)
+	// Post-transaction side effects (best-effort, non-critical)
+	if s.userService != nil {
+		if question.ProblemID != nil {
+			var pt models.ProblemTopic
+			if err := s.db.Where("problem_id = ? AND is_primary = TRUE", *question.ProblemID).First(&pt).Error; err == nil {
+				s.userService.UpdateUserProgress(userID, pt.TopicID, isCorrect, req.TimeTaken)
+				if skill, err := s.userService.GetUserProgress(userID, pt.TopicID); err == nil {
+					response.NewProficiencyLevel = skill.ProficiencyLevel
+				}
+			}
+		}
+		s.userService.RecordDailyActivity(userID, req.TimeTaken)
+		s.userService.UpdateStreak(userID)
+		s.userService.AddStudyTime(userID, int64(req.TimeTaken))
+	}
 
-	// Calculate points
-	points := s.CalculatePoints(question, isCorrect, req.TimeTaken, req.HintsUsed)
-
-	// Build response
-	response := &AnswerResponse{
-		IsCorrect:     isCorrect,
-		CorrectAnswer: question.CorrectAnswer,
-		Explanation:   question.Explanation,
-		AttemptID:     attempt.AttemptID,
-		PointsEarned:  points,
+	if s.spacedRepService != nil {
+		quality := QualityFromAttempt(isCorrect, req.TimeTaken, question.EstimatedTimeSeconds, req.HintsUsed)
+		s.spacedRepService.ProcessReview(userID, req.QuestionID, quality)
 	}
 
 	// Add wrong answer explanation if applicable
@@ -239,8 +284,8 @@ func (s *QuestionService) CheckCode(question *models.Question, userAnswer map[st
 	result, err := executor.RunTests(code, language, testCaseList)
 
 	if err != nil {
-		// If execution service is unavailable, fallback to validation
-		return executor.ValidateCode(code, language)
+		// Code execution service unavailable — don't silently pass
+		return false
 	}
 
 	return result.AllPassed

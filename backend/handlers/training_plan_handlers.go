@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/yourusername/algoholic/middleware"
 	"github.com/yourusername/algoholic/services"
+	"github.com/yourusername/algoholic/utils"
 )
 
 type TrainingPlanHandler struct {
@@ -45,7 +46,7 @@ func (h *TrainingPlanHandler) CreateTrainingPlan(c *fiber.Ctx) error {
 	})
 }
 
-// GetUserPlans retrieves all training plans for the user
+// GetUserPlans retrieves paginated training plans for the user
 func (h *TrainingPlanHandler) GetUserPlans(c *fiber.Ctx) error {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -54,17 +55,16 @@ func (h *TrainingPlanHandler) GetUserPlans(c *fiber.Ctx) error {
 		})
 	}
 
-	plans, err := h.trainingPlanService.GetUserPlans(userID)
+	pagination := utils.ParsePagination(c)
+
+	plans, total, err := h.trainingPlanService.GetUserPlans(userID, pagination.PageSize, pagination.Offset())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve training plans",
 		})
 	}
 
-	return c.JSON(fiber.Map{
-		"plans": plans,
-		"count": len(plans),
-	})
+	return c.JSON(utils.NewPaginatedResponse(plans, total, pagination))
 }
 
 // GetTrainingPlan retrieves a specific training plan

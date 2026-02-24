@@ -1,7 +1,11 @@
 package routes
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"gorm.io/gorm"
 
 	"github.com/yourusername/algoholic/config"
@@ -15,8 +19,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	// Initialize services
 	authService := services.NewAuthService(db, cfg)
 	problemService := services.NewProblemService(db)
-	questionService := services.NewQuestionService(db)
 	userService := services.NewUserService(db)
+	spacedRepService := services.NewSpacedRepetitionService(db)
+	questionService := services.NewQuestionService(db, userService, spacedRepService)
 	trainingPlanService := services.NewTrainingPlanService(db, questionService, userService)
 
 	// Phase 2: Intelligence services
@@ -28,30 +33,69 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	authHandler := handlers.NewAuthHandler(authService)
 	problemHandler := handlers.NewProblemHandler(problemService)
 	questionHandler := handlers.NewQuestionHandler(questionService, userService)
-	userHandler := handlers.NewUserHandler(userService, questionService)
+	userHandler := handlers.NewUserHandler(userService, questionService, spacedRepService)
 	trainingPlanHandler := handlers.NewTrainingPlanHandler(trainingPlanService)
 	listHandler := handlers.NewListHandler(db)
 	activityHandler := handlers.NewActivityHandler(db)
 	searchHandler := handlers.NewSearchHandler(db, vectorService, graphService)
 	topicHandler := handlers.NewTopicHandler(db)
 
-	// Public routes
-	api := app.Group("/api")
+	// Rate limiting helpers
+	rateLimitReached := func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+			"error": "Too many requests. Please try again later.",
+		})
+	}
 
-	// Health check
+	// Global rate limit: 100 requests/minute per IP
+	api := app.Group("/api", limiter.New(limiter.Config{
+		Max:        100,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: rateLimitReached,
+	}))
+
+	// Health check with dependency status
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
+		health := fiber.Map{
 			"status":      "healthy",
 			"app":         cfg.App.Name,
 			"version":     cfg.App.Version,
 			"environment": cfg.App.Environment,
-		})
+			"timestamp":   time.Now().UTC(),
+		}
+
+		// Check PostgreSQL
+		sqlDB, err := db.DB()
+		if err != nil || sqlDB.Ping() != nil {
+			health["status"] = "degraded"
+			health["database"] = "unreachable"
+		} else {
+			health["database"] = "ok"
+		}
+
+		statusCode := fiber.StatusOK
+		if health["status"] == "degraded" {
+			statusCode = fiber.StatusServiceUnavailable
+		}
+
+		return c.Status(statusCode).JSON(health)
 	})
 
-	// Auth routes (public)
-	auth := api.Group("/auth")
+	// Auth routes (public, stricter rate limit: 10/minute per IP)
+	auth := api.Group("/auth", limiter.New(limiter.Config{
+		Max:          10,
+		Expiration:   1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string { return c.IP() },
+		LimitReached: rateLimitReached,
+	}))
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+	auth.Post("/forgot-password", authHandler.ForgotPassword)
+	auth.Post("/reset-password", authHandler.ResetPassword)
+	auth.Post("/refresh", authHandler.RefreshToken)
 
 	// Protected routes
 	protected := api.Group("")
@@ -78,7 +122,17 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	questions.Get("/random", questionHandler.GetRandomQuestion)
 	questions.Get("/:id", questionHandler.GetQuestion)
 	questions.Get("/:id/hint", questionHandler.GetHint)
-	protected.Post("/questions/:id/answer", questionHandler.SubmitAnswer)
+	protected.Post("/questions/:id/answer", limiter.New(limiter.Config{
+		Max:        20,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			if uid, ok := c.Locals("user_id").(int); ok {
+				return fmt.Sprintf("answer:%d", uid)
+			}
+			return c.IP()
+		},
+		LimitReached: rateLimitReached,
+	}), questionHandler.SubmitAnswer)
 	protected.Get("/questions/:id/attempts", questionHandler.GetUserAttempts)
 
 	// Topic routes (public)
@@ -86,7 +140,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	topics.Get("/", topicHandler.GetAllTopics)
 	topics.Get("/:id", topicHandler.GetTopicByID)
 	topics.Get("/:id/prerequisites", searchHandler.GetTopicPrerequisites)
-	topics.Get("/:userId/performance/:topicId", topicHandler.GetTopicPerformance)
+
+	// Topic performance (protected — uses authenticated user)
+	protected.Get("/topics/:topicId/performance", topicHandler.GetTopicPerformance)
 
 	// Problem questions
 	api.Get("/problems/:problemId/questions", questionHandler.GetQuestionsByProblem)
@@ -102,6 +158,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	users.Get("/me/preferences", userHandler.GetPreferences)
 	users.Put("/me/preferences", userHandler.UpdatePreferences)
 	users.Get("/me/attempts", userHandler.GetRecentAttempts)
+	users.Get("/me/due-reviews", userHandler.GetDueReviews)
 
 	// Training plan routes (all protected)
 	plans := protected.Group("/training-plans")

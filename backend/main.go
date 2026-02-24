@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -132,9 +133,9 @@ func main() {
 
 	// CORS configuration from config
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.Server.CORS.AllowOrigins[0], // Fiber expects string, not []string
-		AllowMethods:     cfg.Server.CORS.AllowMethods[0],
-		AllowHeaders:     cfg.Server.CORS.AllowHeaders[0],
+		AllowOrigins:     strings.Join(cfg.Server.CORS.AllowOrigins, ","),
+		AllowMethods:     strings.Join(cfg.Server.CORS.AllowMethods, ","),
+		AllowHeaders:     strings.Join(cfg.Server.CORS.AllowHeaders, ","),
 		AllowCredentials: cfg.Server.CORS.AllowCredentials,
 		MaxAge:           cfg.Server.CORS.MaxAge,
 	}))
@@ -159,14 +160,14 @@ func main() {
 
 	log.Println("Shutting down server...")
 
-	// Close database connections
-	if sqlDB, err := DB.DB(); err == nil {
-		sqlDB.Close()
-	}
-
-	// Shutdown server with timeout
+	// Shutdown server first to drain in-flight requests
 	if err := app.ShutdownWithTimeout(time.Duration(cfg.Server.ShutdownTimeout) * time.Second); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	// Then close database connections
+	if sqlDB, err := DB.DB(); err == nil {
+		sqlDB.Close()
 	}
 
 	log.Println("Server exited successfully")

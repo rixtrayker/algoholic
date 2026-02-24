@@ -277,21 +277,22 @@ func (UserSkill) TableName() string {
 
 // TrainingPlan represents a personalized training plan
 type TrainingPlan struct {
-	PlanID             int         `json:"plan_id" gorm:"primaryKey;column:plan_id"`
-	UserID             int         `json:"user_id" gorm:"column:user_id;not null;index"`
-	Name               string      `json:"name" gorm:"column:name;not null"`
-	Description        *string     `json:"description,omitempty" gorm:"column:description"`
-	PlanType           *string     `json:"plan_type,omitempty" gorm:"column:plan_type"`
-	DifficultyRange    *string     `json:"difficulty_range,omitempty" gorm:"column:difficulty_range"`
-	TargetTopics       StringArray `json:"target_topics,omitempty" gorm:"column:target_topics;type:integer[]"`
-	TargetPatterns     StringArray `json:"target_patterns,omitempty" gorm:"column:target_patterns;type:text[]"`
-	DurationDays       *int        `json:"duration_days,omitempty" gorm:"column:duration_days"`
-	QuestionsPerDay    int         `json:"questions_per_day" gorm:"column:questions_per_day;default:5"`
-	AdaptiveDifficulty bool        `json:"adaptive_difficulty" gorm:"column:adaptive_difficulty;default:true"`
-	ProgressPercentage float64     `json:"progress_percentage" gorm:"column:progress_percentage;default:0"`
-	Status             string      `json:"status" gorm:"column:status;default:'active'"`
-	StartDate          time.Time   `json:"start_date" gorm:"column:start_date;not null"`
-	CreatedAt          time.Time   `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	PlanID             int            `json:"plan_id" gorm:"primaryKey;column:plan_id"`
+	UserID             int            `json:"user_id" gorm:"column:user_id;not null;index"`
+	Name               string         `json:"name" gorm:"column:name;not null"`
+	Description        *string        `json:"description,omitempty" gorm:"column:description"`
+	PlanType           *string        `json:"plan_type,omitempty" gorm:"column:plan_type"`
+	DifficultyRange    *string        `json:"difficulty_range,omitempty" gorm:"column:difficulty_range"`
+	TargetTopics       StringArray    `json:"target_topics,omitempty" gorm:"column:target_topics;type:integer[]"`
+	TargetPatterns     StringArray    `json:"target_patterns,omitempty" gorm:"column:target_patterns;type:text[]"`
+	DurationDays       *int           `json:"duration_days,omitempty" gorm:"column:duration_days"`
+	QuestionsPerDay    int            `json:"questions_per_day" gorm:"column:questions_per_day;default:5"`
+	AdaptiveDifficulty bool           `json:"adaptive_difficulty" gorm:"column:adaptive_difficulty;default:true"`
+	ProgressPercentage float64        `json:"progress_percentage" gorm:"column:progress_percentage;default:0"`
+	Status             string         `json:"status" gorm:"column:status;default:'active'"`
+	StartDate          time.Time      `json:"start_date" gorm:"column:start_date;not null"`
+	CreatedAt          time.Time      `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	DeletedAt          gorm.DeletedAt `json:"-" gorm:"column:deleted_at;index"`
 }
 
 func (TrainingPlan) TableName() string {
@@ -300,16 +301,17 @@ func (TrainingPlan) TableName() string {
 
 // TrainingPlanItem represents an item in a training plan
 type TrainingPlanItem struct {
-	ItemID         int        `json:"item_id" gorm:"primaryKey;column:item_id"`
-	PlanID         int        `json:"plan_id" gorm:"column:plan_id;not null;index"`
-	QuestionID     *int       `json:"question_id,omitempty" gorm:"column:question_id"`
-	ProblemID      *int       `json:"problem_id,omitempty" gorm:"column:problem_id"`
-	SequenceNumber int        `json:"sequence_number" gorm:"column:sequence_number;not null"`
-	DayNumber      *int       `json:"day_number,omitempty" gorm:"column:day_number"`
-	ScheduledFor   *time.Time `json:"scheduled_for,omitempty" gorm:"column:scheduled_for"`
-	ItemType       string     `json:"item_type" gorm:"column:item_type;not null"`
-	IsCompleted    bool       `json:"is_completed" gorm:"column:is_completed;default:false"`
-	CompletedAt    *time.Time `json:"completed_at,omitempty" gorm:"column:completed_at"`
+	ItemID         int            `json:"item_id" gorm:"primaryKey;column:item_id"`
+	PlanID         int            `json:"plan_id" gorm:"column:plan_id;not null;index"`
+	QuestionID     *int           `json:"question_id,omitempty" gorm:"column:question_id"`
+	ProblemID      *int           `json:"problem_id,omitempty" gorm:"column:problem_id"`
+	SequenceNumber int            `json:"sequence_number" gorm:"column:sequence_number;not null"`
+	DayNumber      *int           `json:"day_number,omitempty" gorm:"column:day_number"`
+	ScheduledFor   *time.Time     `json:"scheduled_for,omitempty" gorm:"column:scheduled_for"`
+	ItemType       string         `json:"item_type" gorm:"column:item_type;not null"`
+	IsCompleted    bool           `json:"is_completed" gorm:"column:is_completed;default:false"`
+	CompletedAt    *time.Time     `json:"completed_at,omitempty" gorm:"column:completed_at"`
+	DeletedAt      gorm.DeletedAt `json:"-" gorm:"column:deleted_at;index"`
 }
 
 func (TrainingPlanItem) TableName() string {
@@ -359,16 +361,17 @@ func (WeaknessAnalysis) TableName() string {
 
 // UserList represents a custom problem list created by a user
 type UserList struct {
-	ListID      int       `json:"list_id" gorm:"primaryKey;column:list_id"`
-	UserID      int       `json:"user_id" gorm:"column:user_id;not null;index"`
-	Name        string    `json:"name" gorm:"column:name;not null"`
-	Description *string   `json:"description,omitempty" gorm:"column:description"`
-	IsPublic    bool      `json:"is_public" gorm:"column:is_public;default:false"`
-	ProblemIDs  JSONB     `json:"problem_ids" gorm:"column:problem_ids;type:jsonb;not null;default:'[]'"`
-	TotalItems  int       `json:"total_items" gorm:"column:total_items;default:0"`
-	Completed   int       `json:"completed" gorm:"column:completed;default:0"`
-	CreatedAt   time.Time `json:"created_at" gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+	ListID      int            `json:"list_id" gorm:"primaryKey;column:list_id"`
+	UserID      int            `json:"user_id" gorm:"column:user_id;not null;index"`
+	Name        string         `json:"name" gorm:"column:name;not null"`
+	Description *string        `json:"description,omitempty" gorm:"column:description"`
+	IsPublic    bool           `json:"is_public" gorm:"column:is_public;default:false"`
+	ProblemIDs  JSONB          `json:"problem_ids" gorm:"column:problem_ids;type:jsonb;not null;default:'[]'"`
+	TotalItems  int            `json:"total_items" gorm:"column:total_items;default:0"`
+	Completed   int            `json:"completed" gorm:"column:completed;default:0"`
+	CreatedAt   time.Time      `json:"created_at" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt   time.Time      `json:"updated_at" gorm:"column:updated_at;autoUpdateTime"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"column:deleted_at;index"`
 }
 
 func (UserList) TableName() string {

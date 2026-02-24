@@ -82,16 +82,15 @@ type TopicPerformance struct {
 }
 
 func (h *TopicHandler) GetTopicPerformance(c *fiber.Ctx) error {
-	userIDStr := c.Params("userId")
-	topicIDStr := c.Params("topicId")
-
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID",
+	// Use authenticated user ID from JWT instead of URL param
+	userID, ok := c.Locals("user_id").(int)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
 		})
 	}
 
+	topicIDStr := c.Params("topicId")
 	topicID, err := strconv.Atoi(topicIDStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

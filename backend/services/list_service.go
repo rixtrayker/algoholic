@@ -16,13 +16,18 @@ func NewListService(db *gorm.DB) *ListService {
 	return &ListService{db: db}
 }
 
-// GetUserLists returns all lists for a user
-func (s *ListService) GetUserLists(userID int) ([]models.UserList, error) {
+// GetUserLists returns paginated lists for a user
+func (s *ListService) GetUserLists(userID int, limit, offset int) ([]models.UserList, int64, error) {
+	var total int64
+	s.db.Model(&models.UserList{}).Where("user_id = ?", userID).Count(&total)
+
 	var lists []models.UserList
 	err := s.db.Where("user_id = ?", userID).
 		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
 		Find(&lists).Error
-	return lists, err
+	return lists, total, err
 }
 
 // GetList returns a specific list if it belongs to the user

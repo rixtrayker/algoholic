@@ -10,14 +10,16 @@ import (
 )
 
 type UserHandler struct {
-	userService     *services.UserService
-	questionService *services.QuestionService
+	userService      *services.UserService
+	questionService  *services.QuestionService
+	spacedRepService *services.SpacedRepetitionService
 }
 
-func NewUserHandler(userService *services.UserService, questionService *services.QuestionService) *UserHandler {
+func NewUserHandler(userService *services.UserService, questionService *services.QuestionService, spacedRepService *services.SpacedRepetitionService) *UserHandler {
 	return &UserHandler{
-		userService:     userService,
-		questionService: questionService,
+		userService:      userService,
+		questionService:  questionService,
+		spacedRepService: spacedRepService,
 	}
 }
 
@@ -272,5 +274,33 @@ func (h *UserHandler) GetRecentAttempts(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"attempts": attempts,
 		"count":    len(attempts),
+	})
+}
+
+// GetDueReviews retrieves questions due for spaced repetition review
+func (h *UserHandler) GetDueReviews(c *fiber.Ctx) error {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	limit := c.QueryInt("limit", 20)
+
+	reviews, err := h.spacedRepService.GetDueReviews(userID, limit)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve due reviews",
+		})
+	}
+
+	total, due, _ := h.spacedRepService.GetReviewStats(userID)
+
+	return c.JSON(fiber.Map{
+		"reviews":       reviews,
+		"count":         len(reviews),
+		"total_tracked": total,
+		"total_due":     due,
 	})
 }
